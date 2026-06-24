@@ -519,3 +519,231 @@ docker compose \
 # Remove unused images to free disk space
 docker image prune -f
 ```
+
+---
+
+## DevOps Quickstart — Separating FE and BE
+
+This section is for DevOps engineers deploying or maintaining the Avenews DataHub stack.
+
+### Two Custom Images to Build
+
+Everything starts with building two custom Docker images. These must be rebuilt whenever source code changes.
+
+**Frontend Image (`datahub-frontend-custom`)**
+```bash
+# 1. Build the React app first (required before building the image)
+cd ~/datahub/datahub-web-react
+yarn install
+yarn build
+
+# 2. Build the Docker image from repo root
+cd ~/datahub
+docker build \
+  --no-cache \
+  -f docker/datahub-frontend/Dockerfile.custom \
+  -t datahub-frontend-custom:latest \
+  .
+```
+
+**Actions Image (`datahub-actions-custom`)**
+```bash
+cd ~/datahub
+docker build \
+  --no-cache \
+  -f docker/datahub-actions/Dockerfile.custom \
+  -t datahub-actions-custom:latest \
+  .
+```
+
+---
+
+### FE Container
+
+| Property | Value |
+|----------|-------|
+| Service name | `frontend-quickstart` |
+| Image | `datahub-frontend-custom:latest` |
+| Port | `9002` |
+| Health check | `GET /admin` |
+| Depends on | `datahub-gms-quickstart` (BE) |
+
+The FE container is a Play 3 / Apache Pekko application. It serves the React app and proxies API calls to GMS.
+
+**Environment variables required:**
+```
+DATAHUB_GMS_HOST=datahub-gms
+DATAHUB_GMS_PORT=8080
+DATAHUB_SECRET=<32+ char secret>
+DATAHUB_TOKEN_SERVICE_SIGNING_KEY=<32+ char secret>
+DATAHUB_TOKEN_SERVICE_SALT=<32+ char secret>
+```
+
+**To restart FE only (zero downtime for BE):**
+```bash
+cd ~/datahub/datahub-deployment
+
+docker compose \
+  -f docker-compose.quickstart-base.yml \
+  -f docker-compose.override.yml \
+  --profile quickstart \
+  up -d --no-deps frontend-quickstart
+```
+
+---
+
+### BE Containers
+
+The backend consists of these services:
+
+| Service | Image | Role |
+|---------|-------|------|
+| `datahub-gms-quickstart` | `acryldata/datahub-gms:quickstart` | Core metadata API (GraphQL + REST) |
+| `datahub-actions-quickstart` | `datahub-actions-custom:latest` | Ingestion executor + event processor |
+| `system-update-quickstart` | `acryldata/datahub-upgrade:quickstart` | One-shot schema migration (runs on startup) |
+| `mysql` | `mysql:8.2` | Primary metadata store |
+| `opensearch` | `opensearchproject/opensearch:2.19.3` | Search + graph backend |
+| `kafka-broker` | `confluentinc/cp-kafka:8.0.0` | Event streaming |
+
+**GMS environment variables required:**
+```
+DATAHUB_SECRET=<same as FE>
+DATAHUB_TOKEN_SERVICE_SIGNING_KEY=<same as FE>
+DATAHUB_TOKEN_SERVICE_SALT=<same as FE>
+METADATA_SERVICE_AUTH_ENABLED=true
+MYSQL_PASSWORD=<db password>
+MYSQL_ROOT_PASSWORD=datahub  ← must be 'datahub', used by system-update
+```
+
+**To restart BE only (keeps FE running):**
+```bash
+cd ~/datahub/datahub-deployment
+
+docker compose \
+  -f docker-compose.quickstart-base.yml \
+  -f docker-compose.override.yml \
+  --profile quickstart \
+  up -d --no-deps datahub-gms-quickstart
+```
+
+---
+
+### Always Use Both Compose Files
+
+Every `docker compose` command must reference both files and the profile:
+
+```bash
+docker compose \
+  -f docker-compose.quickstart-base.yml \
+  -f docker-compose.override.yml \
+  --profile quickstart \
+  <command>
+```
+
+The base file (`docker-compose.quickstart-base.yml`) is the official DataHub compose — never edit it. The override file (`docker-compose.override.yml`) contains all Avenews customisations and is merged on top.
+
+---
+
+### Deploying Updates
+
+**FE-only update** (e.g. UI changes, branding, new ingestion source UI):
+```bash
+# 1. Rebuild React app
+cd ~/datahub/datahub-web-react && yarn build
+
+# 2. Rebuild FE image
+cd ~/datahub
+docker build --no-cache \
+  -f docker/datahub-frontend/Dockerfile.custom \
+  -t datahub-frontend-custom:latest .
+
+# 3. Restart FE container only — BE stays up
+cd ~/datahub/datahub-deployment
+docker compose -f docker-compose.quickstart-base.yml \
+  -f docker-compose.override.yml --profile quickstart \
+  up -d --no-deps frontend-quickstart
+```
+
+**Actions-only update** (e.g. new custom ingestion source):
+```bash
+# 1. Rebuild actions image
+cd ~/datahub
+docker build --no-cache \
+  -f docker/datahub-actions/Dockerfile.custom \
+  -t datahub-actions-custom:latest .
+
+# 2. Restart actions container only
+cd ~/datahub/datahub-deployment
+docker compose -f docker-compose.quickstart-base.yml \
+  -f docker-compose.override.yml --profile quickstart \
+  up -d --no-deps datahub-actions-quickstart
+```
+
+**Full stack update** (e.g. DataHub version bump):
+```bash
+cd ~/datahub/datahub-deployment
+
+# Bring everything down (use -v only if schema migration requires it)
+docker compose -f docker-compose.quickstart-base.yml \
+  -f docker-compose.override.yml --profile quickstart \
+  down --remove-orphans
+
+# Bring everything back up
+docker compose -f docker-compose.quickstart-base.yml \
+  -f docker-compose.override.yml --profile quickstart \
+  up -d
+```
+
+---
+
+### Custom Ingestion Sources — Important Notes
+
+Three custom ingestion sources are bundled in `datahub-actions-custom`:
+
+| Source | Type key | CLI Version setting |
+|--------|----------|---------------------|
+| Zoho CRM | `zoho-crm` | **Must be set to `bundled`** |
+| Zoho Books | `zoho-books` | **Must be set to `bundled`** |
+| PostHog | `posthog` | **Must be set to `bundled`** |
+| All other sources | e.g. `mongodb` | Leave as default (`1.6.0.6rc2`) |
+
+When creating ingestion sources for Zoho/PostHog in the UI:
+1. Go to **Ingestion** → **Create Source**
+2. Select the source type
+3. Click **Advanced**
+4. Set **CLI Version** to `bundled`
+5. Save and Run
+
+Standard sources (MongoDB, PostgreSQL, etc.) do NOT need `bundled` — they download dynamically from PyPI.
+
+---
+
+### Port Reference
+
+| Service | Internal port | Exposed on host |
+|---------|--------------|-----------------|
+| Frontend UI | 9002 | `0.0.0.0:9002` |
+| GMS API | 8080 | `127.0.0.1` only |
+| MySQL | 3306 | `127.0.0.1` only |
+| OpenSearch | 9200 | `127.0.0.1` only |
+| Kafka | 9092 | `127.0.0.1` only |
+
+Only port 9002 is publicly accessible. All other ports are bound to localhost. Put a reverse proxy (nginx/Caddy/Traefik) in front of 9002 for TLS termination in production.
+
+---
+
+### Quick Health Check
+
+```bash
+# All containers
+docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Status}}"
+
+# GMS API
+curl http://localhost:8080/health
+
+# Frontend
+curl -s http://localhost:9002 | grep title
+
+# Actions container running
+docker ps | grep actions
+```
