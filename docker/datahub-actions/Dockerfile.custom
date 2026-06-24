@@ -1,0 +1,50 @@
+FROM acryldata/datahub-actions:quickstart-locked
+
+USER root
+
+# Override the broken index URL baked into the base image
+ENV UV_INDEX_URL=https://pypi.org/simple
+ENV PIP_INDEX_URL=https://pypi.org/simple
+
+# Install uv directly via binary download
+RUN curl -L "https://github.com/astral-sh/uv/releases/latest/download/uv-x86_64-unknown-linux-musl.tar.gz" \
+    -o /tmp/uv.tar.gz && \
+    tar -xzf /tmp/uv.tar.gz -C /tmp && \
+    mv /tmp/uv-x86_64-unknown-linux-musl/uv /usr/bin/uv && \
+    mv /tmp/uv-x86_64-unknown-linux-musl/uvx /usr/bin/uvx && \
+    chmod +x /usr/bin/uv /usr/bin/uvx && \
+    rm -rf /tmp/uv.tar.gz /tmp/uv-x86_64-unknown-linux-musl
+
+# Install pip into the main venv and fix cache permissions
+RUN /usr/bin/uv pip install \
+    --python /home/datahub/.venv/bin/python3 \
+    pip && \
+    mkdir -p /home/datahub/.cache/uv && \
+    chown -R datahub:datahub /home/datahub/.cache
+
+# Copy custom sources into the metadata-ingestion source tree
+COPY metadata-ingestion/src/datahub/ingestion/source/zoho_crm/ \
+     /metadata-ingestion/src/datahub/ingestion/source/zoho_crm/
+
+COPY metadata-ingestion/src/datahub/ingestion/source/zoho_books/ \
+     /metadata-ingestion/src/datahub/ingestion/source/zoho_books/
+
+COPY metadata-ingestion/src/datahub/ingestion/source/posthog/ \
+     /metadata-ingestion/src/datahub/ingestion/source/posthog/
+
+# Insert custom sources under the correct group in entry_points.txt
+RUN EP_FILE="/opt/datahub/venvs/common-venv/lib/python3.11/site-packages/acryl_datahub-1!0.0.0.dev0.dist-info/entry_points.txt" && \
+    sed -i '/^\[datahub\.ingestion\.source\.plugins\]/a zoho-crm = datahub.ingestion.source.zoho_crm.zoho_crm_source:ZohoCRMSource\nzoho-books = datahub.ingestion.source.zoho_books.zoho_books_source:ZohoBooksSource\nposthog = datahub.ingestion.source.posthog.posthog_source:PostHogSource' "$EP_FILE"
+
+# Create proper bundled venvs for custom sources
+RUN for plugin in zoho-crm zoho-books posthog; do \
+      mkdir -p /opt/datahub/venvs/${plugin}-bundled/bin && \
+      ln -s /opt/datahub/venvs/common-venv/bin/python \
+            /opt/datahub/venvs/${plugin}-bundled/bin/python && \
+      ln -s /opt/datahub/venvs/common-venv/bin/python3 \
+            /opt/datahub/venvs/${plugin}-bundled/bin/python3 && \
+      ln -s /opt/datahub/venvs/common-venv/bin/datahub \
+            /opt/datahub/venvs/${plugin}-bundled/bin/datahub; \
+    done
+
+USER datahub

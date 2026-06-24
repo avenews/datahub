@@ -2,6 +2,7 @@
     {
         "urn": "urn:li:dataPlatform:aerospike",
         "name": "aerospike",
+        "hidden": true,
         "displayName": "Aerospike",
         "docsUrl": "https://datahubproject.io/docs/generated/ingestion/sources/aerospike/",
         "recipe": "source:\n    type: aerospike\n    config:\n        hosts:\n            - - localhost\n              - 3000\n        stateful_ingestion:\n            enabled: true"
@@ -9,6 +10,7 @@
     {
         "urn": "urn:li:dataPlatform:bigquery",
         "name": "bigquery",
+        "hidden": true,
         "displayName": "BigQuery",
         "description": "Import Projects, Datasets, Tables, Views, lineage, queries, and statistics from BigQuery.",
         "docsUrl": "https://docs.datahub.com/docs/quick-ingestion-guides/bigquery/overview",
@@ -17,6 +19,7 @@
     {
         "urn": "urn:li:dataPlatform:redshift",
         "name": "redshift",
+        "hidden": true,
         "displayName": "Redshift",
         "description": "Import Tables, Views, Databases, Schemas, lineage, queries, and statistics from Redshift.",
         "docsUrl": "https://docs.datahub.com/docs/quick-ingestion-guides/redshift/overview",
@@ -25,6 +28,7 @@
     {
         "urn": "urn:li:dataPlatform:omni",
         "name": "omni",
+        "hidden": true,
         "displayName": "Omni",
         "description": "Import Dashboards, Charts, and lineage from Omni.",
         "docsUrl": "https://docs.datahub.com/docs/generated/ingestion/sources/omni",
@@ -33,6 +37,7 @@
     {
         "urn": "urn:li:dataPlatform:snaplogic",
         "name": "snaplogic",
+        "hidden": true,
         "displayName": "SnapLogic",
         "description": "Import lineage from SnapLogic.",
         "docsUrl": "https://docs.datahub.com/docs/generated/ingestion/sources/snaplogic",
@@ -49,6 +54,7 @@
     {
         "urn": "urn:li:dataPlatform:starrocks",
         "name": "starrocks",
+        "hidden": true,
         "displayName": "StarRocks",
         "description": "Import Tables, Views, Databases, Schemas, and statistics from StarRocks.",
         "docsUrl": "https://docs.datahub.com/docs/generated/ingestion/sources/starrocks/",
@@ -57,6 +63,7 @@
     {
         "urn": "urn:li:dataPlatform:databricks",
         "name": "databricks",
+        "hidden": true,
         "displayName": "Databricks",
         "description": "Import Metastores, Schemas, Tables, lineage, queries, and statistics from Databricks Unity Catalog.",
         "docsUrl": "https://docs.datahub.com/docs/generated/ingestion/sources/databricks/",
@@ -65,6 +72,7 @@
     {
         "urn": "urn:li:dataPlatform:looker",
         "name": "looker",
+        "hidden": true,
         "displayName": "Looker",
         "description": "Import Models, Explores, Views, Looks, Dashboards, and lineage from Looker.",
         "docsUrl": "https://docs.datahub.com/docs/quick-ingestion-guides/looker/overview#looker",
@@ -73,6 +81,7 @@
     {
         "urn": "urn:li:dataPlatform:lookml",
         "name": "lookml",
+        "hidden": true,
         "displayName": "LookML",
         "description": "Import Models, Explores, Views, Looks, Dashboards, and lineage from LookML files.",
         "docsUrl": "https://docs.datahub.com/docs/quick-ingestion-guides/looker/overview#lookml",
@@ -81,6 +90,7 @@
     {
         "urn": "urn:li:dataPlatform:tableau",
         "name": "tableau",
+        "hidden": true,
         "displayName": "Tableau",
         "description": "Import Data Sources, Workbooks, Worksheets, Tags, Dashboards, and lineage from Tableau.",
         "docsUrl": "https://docs.datahub.com/docs/quick-ingestion-guides/tableau/overview",
@@ -89,6 +99,7 @@
     {
         "urn": "urn:li:dataPlatform:thoughtspot",
         "name": "thoughtspot",
+        "hidden": true,
         "displayName": "ThoughtSpot",
         "description": "Import Liveboards, Answers, Visualizations, Worksheets, Tags, and column-level lineage from ThoughtSpot.",
         "docsUrl": "https://docs.datahub.com/docs/generated/ingestion/sources/thoughtspot/",
@@ -97,6 +108,7 @@
     {
         "urn": "urn:li:dataPlatform:powerbi",
         "name": "powerbi",
+        "hidden": true,
         "displayName": "PowerBI",
         "description": "Import  Dashboards, Tiles, Datasets, and lineage from PowerBI.",
         "docsUrl": "https://docs.datahub.com/docs/generated/ingestion/sources/powerbi/",
@@ -121,6 +133,7 @@
     {
         "urn": "urn:li:dataPlatform:mysql",
         "name": "mysql",
+        "hidden": true,
         "displayName": "MySQL",
         "description": "Import Tables, Views, Databases, Schemas, and statistics from MySQL.",
         "docsUrl": "https://docs.datahub.com/docs/generated/ingestion/sources/mysql/",
@@ -129,6 +142,7 @@
     {
         "urn": "urn:li:dataPlatform:tidb",
         "name": "tidb",
+        "hidden": true,
         "displayName": "TiDB",
         "description": "Import Tables, Views, Databases, Schemas, and statistics from TiDB.",
         "docsUrl": "https://docs.datahub.com/docs/generated/ingestion/sources/tidb/",
@@ -137,6 +151,7 @@
     {
         "urn": "urn:li:dataPlatform:postgres",
         "name": "postgres",
+        "hidden": true,
         "displayName": "Postgres",
         "description": "Import Tables, Views, Databases, Schemas, and statistics from Postgres.",
         "docsUrl": "https://docs.datahub.com/docs/generated/ingestion/sources/postgres/",
@@ -145,6 +160,7 @@
     {
         "urn": "urn:li:dataPlatform:timescaledb",
         "name": "timescaledb",
+        "hidden": true,
         "displayName": "TimescaleDB",
         "description": "Import Tables, Views, Hypertables, Continuous Aggregates, and Background Jobs from TimescaleDB.",
         "docsUrl": "https://docs.datahub.com/docs/generated/ingestion/sources/timescaledb/",
@@ -153,6 +169,7 @@
     {
         "urn": "urn:li:dataPlatform:kafka",
         "name": "kafka",
+        "hidden": true,
         "displayName": "Kafka",
         "description": "Import streaming topics from Kafka.",
         "docsUrl": "https://docs.datahub.com/docs/generated/ingestion/sources/kafka/",
@@ -161,6 +178,7 @@
     {
         "urn": "urn:li:dataPlatform:flink",
         "name": "flink",
+        "hidden": true,
         "displayName": "Flink",
         "description": "Import jobs, lineage, and run history from Flink.",
         "docsUrl": "https://docs.datahub.com/docs/generated/ingestion/sources/flink/",
@@ -169,6 +187,7 @@
     {
         "urn": "urn:li:dataPlatform:hive",
         "name": "hive",
+        "hidden": true,
         "displayName": "Hive",
         "description": "Import Tables, Views, Databases, Schemas, and statistics from Hive.",
         "docsUrl": "https://docs.datahub.com/docs/generated/ingestion/sources/hive/",
@@ -177,6 +196,7 @@
     {
         "urn": "urn:li:dataPlatform:presto",
         "name": "presto",
+        "hidden": true,
         "displayName": "Presto",
         "description": "Import Tables, Databases, Schemas, and statistics from Presto.",
         "docsUrl": "https://docs.datahub.com/docs/generated/ingestion/sources/presto/",
@@ -185,6 +205,7 @@
     {
         "urn": "urn:li:dataPlatform:trino",
         "name": "trino",
+        "hidden": true,
         "displayName": "Trino",
         "description": "Import Tables, Databases, Schemas, and statistics from Trino.",
         "docsUrl": "https://docs.datahub.com/docs/generated/ingestion/sources/trino/",
@@ -193,6 +214,7 @@
     {
         "urn": "urn:li:dataPlatform:glue",
         "name": "glue",
+        "hidden": true,
         "displayName": "Glue",
         "description": "Import Tables, Databases, Jobs, statistics, and lineage to S3 from AWS Glue.",
         "docsUrl": "https://docs.datahub.com/docs/generated/ingestion/sources/glue/",
@@ -201,6 +223,7 @@
     {
         "urn": "urn:li:dataPlatform:mssql",
         "name": "mssql",
+        "hidden": true,
         "displayName": "Microsoft SQL Server",
         "description": "Import Tables, Views, Databases, Schemas, and statistics from SQL Server.",
         "docsUrl": "https://docs.datahub.com/docs/generated/ingestion/sources/mssql/",
@@ -209,6 +232,7 @@
     {
         "urn": "urn:li:dataPlatform:mariadb",
         "name": "mariadb",
+        "hidden": true,
         "displayName": "MariaDB",
         "description": "Import Tables, Views, Databases, Schemas, and statistics from MariaDB.",
         "docsUrl": "https://docs.datahub.com/docs/generated/ingestion/sources/mariadb/",
@@ -217,6 +241,7 @@
     {
         "urn": "urn:li:dataPlatform:doris",
         "name": "doris",
+        "hidden": true,
         "displayName": "Apache Doris",
         "description": "Import Tables, Views, Databases, Schemas, and statistics from Apache Doris.",
         "docsUrl": "https://docs.datahub.com/docs/generated/ingestion/sources/doris/",
@@ -233,6 +258,7 @@
     {
         "urn": "urn:li:dataPlatform:dynamodb",
         "name": "dynamodb",
+        "hidden": true,
         "displayName": "DynamoDB",
         "description": "Import Tables from DynamoDB.",
         "docsUrl": "https://docs.datahub.com/docs/metadata-ingestion/",
@@ -241,6 +267,7 @@
     {
         "urn": "urn:li:dataPlatform:oracle",
         "name": "oracle",
+        "hidden": true,
         "displayName": "Oracle",
         "description": "Import Databases, Schemas, Tables, Views, statistics, and lineage from Oracle.",
         "docsUrl": "https://docs.datahub.com/docs/generated/ingestion/sources/oracle/",
@@ -249,6 +276,7 @@
     {
         "urn": "urn:li:dataPlatform:superset",
         "name": "superset",
+        "hidden": true,
         "displayName": "Superset",
         "description": "Import Charts and Dashboards from Superset",
         "docsUrl": "https://docs.datahub.com/docs/generated/ingestion/sources/superset/",
@@ -257,6 +285,7 @@
     {
         "urn": "urn:li:dataPlatform:athena",
         "name": "athena",
+        "hidden": true,
         "displayName": "Athena",
         "description": "Import Schemas, Tables, Views, and lineage to S3 from Athena.",
         "docsUrl": "https://docs.datahub.com/docs/generated/ingestion/sources/athena/",
@@ -265,6 +294,7 @@
     {
         "urn": "urn:li:dataPlatform:clickhouse",
         "name": "clickhouse",
+        "hidden": true,
         "displayName": "ClickHouse",
         "description": "Import Tables, Views, Materialized Views, Dictionaries, statistics, queries, and lineage from ClickHouse.",
         "docsUrl": "https://docs.datahub.com/docs/generated/ingestion/sources/clickhouse/",
@@ -273,6 +303,7 @@
     {
         "urn": "urn:li:dataPlatform:druid",
         "name": "druid",
+        "hidden": true,
         "displayName": "Druid",
         "description": "Import Databases, Schemas, Tables, statistics, and lineage from Druid.",
         "docsUrl": "https://docs.datahub.com/docs/generated/ingestion/sources/druid/",
@@ -281,6 +312,7 @@
     {
         "urn": "urn:li:dataPlatform:mode",
         "name": "mode",
+        "hidden": true,
         "displayName": "Mode",
         "description": "Import Reports, Charts, and lineage from Mode.",
         "docsUrl": "https://docs.datahub.com/docs/generated/ingestion/sources/mode/",
@@ -289,6 +321,7 @@
     {
         "urn": "urn:li:dataPlatform:metabase",
         "name": "metabase",
+        "hidden": true,
         "displayName": "Metabase",
         "description": "Import Collections, Dashboards, and Charts from Metabase.",
         "docsUrl": "https://docs.datahub.com/docs/generated/ingestion/sources/metabase/",
@@ -297,6 +330,7 @@
     {
         "urn": "urn:li:dataPlatform:mlflow",
         "name": "mlflow",
+        "hidden": true,
         "displayName": "MLflow",
         "description": "Import Registered Models, Model Versions, and Model Stages from MLflow.",
         "docsUrl": "https://docs.datahub.com/docs/generated/ingestion/sources/mlflow/",
@@ -305,6 +339,7 @@
     {
         "urn": "urn:li:dataPlatform:azure-ad",
         "name": "azure-ad",
+        "hidden": true,
         "displayName": "Azure AD",
         "description": "Import Users and Groups from Azure Active Directory.",
         "docsUrl": "https://docs.datahub.com/docs/generated/ingestion/sources/azure-ad/",
@@ -313,6 +348,7 @@
     {
         "urn": "urn:li:dataPlatform:okta",
         "name": "okta",
+        "hidden": true,
         "displayName": "Okta",
         "description": "Import Users and Groups from Okta.",
         "docsUrl": "https://docs.datahub.com/docs/generated/ingestion/sources/okta/",
@@ -321,6 +357,7 @@
     {
         "urn": "urn:li:dataPlatform:vertica",
         "name": "vertica",
+        "hidden": true,
         "displayName": "Vertica",
         "description": "Import Databases, Schemas, Tables, Views, Projections, statistics, and lineage from Vertica.",
         "docsUrl": "https://docs.datahub.com/docs/generated/ingestion/sources/vertica/",
@@ -329,6 +366,7 @@
     {
         "urn": "urn:li:dataPlatform:fivetran",
         "name": "fivetran",
+        "hidden": true,
         "displayName": "Fivetran",
         "description": "Import Connectors, Destinations, Sync Histor, Users, and lineage from FiveTran.",
         "docsUrl": "https://docs.datahub.com/docs/generated/ingestion/sources/fivetran/",
@@ -337,6 +375,7 @@
     {
         "urn": "urn:li:dataPlatform:sigma",
         "name": "sigma",
+        "hidden": true,
         "displayName": "Sigma",
         "description": "Import Workspaces, Workbooks, Pages, Elements, and lineage from Sigma Computing.",
         "docsUrl": "https://docs.datahub.com/docs/generated/ingestion/sources/sigma/",
@@ -345,6 +384,7 @@
     {
         "urn": "urn:li:dataPlatform:qlik-sense",
         "name": "qlik-sense",
+        "hidden": true,
         "displayName": "Qlik Sense",
         "description": "Import Spaces, Apps, Sheets, Charts, and Datasets from Qlik Sense.",
         "docsUrl": "https://docs.datahub.com/docs/generated/ingestion/sources/qlik-sense/",
@@ -353,6 +393,7 @@
     {
         "urn": "urn:li:dataPlatform:cockroachdb",
         "name": "cockroachdb",
+        "hidden": true,
         "displayName": "CockroachDb",
         "description": "Import Databases, Schemas, Tables, Views, statistics and lineage from CockroachDB.",
         "docsUrl": "https://docs.datahub.com/docs/generated/ingestion/sources/cockroachdb/",
@@ -369,6 +410,7 @@
     {
         "urn": "urn:li:dataPlatform:sac",
         "name": "sac",
+        "hidden": true,
         "displayName": "SAP Analytics Cloud",
         "description": "Import Stories, Applications and Models from SAP Analytics Cloud.",
         "docsUrl": "https://docs.datahub.com/docs/generated/ingestion/sources/sac/",
@@ -377,6 +419,7 @@
     {
         "urn": "urn:li:dataPlatform:notion",
         "name": "notion",
+        "hidden": true,
         "displayName": "Notion",
         "description": "Import pages from Notion as Documents.",
         "docsUrl": "https://docs.datahub.com/docs/generated/ingestion/sources/notion/",
@@ -401,6 +444,7 @@
     {
         "urn": "urn:li:dataPlatform:dremio",
         "name": "dremio",
+        "hidden": true,
         "displayName": "Dremio",
         "description": "Import Spaces, Sources, Tables and statistics from Dremio.",
         "docsUrl": "https://docs.datahub.com/docs/metadata-ingestion/",
@@ -409,6 +453,7 @@
     {
         "urn": "urn:li:dataPlatform:cassandra",
         "name": "cassandra",
+        "hidden": true,
         "displayName": "CassandraDB",
         "docsUrl": "https://docs.datahub.com/docs/generated/ingestion/sources/cassandra",
         "recipe": "source:\n  type: cassandra\n  config:\n    # Credentials for on prem cassandra\n    contact_point: localhost\n    port: 9042\n    username: admin\n    password: password\n\n    # Or\n    # Credentials Astra Cloud\n    #cloud_config:\n    #  secure_connect_bundle: Path to Secure Connect Bundle (.zip)\n    #  token: Application Token\n\n    # Optional Allow / Deny extraction of particular keyspaces.\n    keyspace_pattern:\n      allow: [.*]\n\n    # Optional Allow / Deny extraction of particular tables.\n    table_pattern:\n      allow: [.*]"
@@ -416,6 +461,7 @@
     {
         "urn": "urn:li:dataPlatform:iceberg",
         "name": "iceberg",
+        "hidden": true,
         "displayName": "Iceberg",
         "description": "Ingest databases and tables from any Iceberg catalog implementation",
         "docsUrl": "https://docs.datahub.com/docs/generated/ingestion/sources/iceberg",
@@ -424,6 +470,7 @@
     {
         "urn": "urn:li:dataPlatform:neo4j",
         "name": "neo4j",
+        "hidden": true,
         "displayName": "Neo4j",
         "description": "Import Nodes and Relationships from Neo4j.",
         "docsUrl": "https://docs.datahub.com/docs/generated/ingestion/sources/neo4j/",
@@ -432,6 +479,7 @@
     {
         "urn": "urn:li:dataPlatform:vertexai",
         "name": "vertexai",
+        "hidden": true,
         "displayName": "Vertex AI",
         "description": "Import ML Models and lineage from Google Vertex AI.",
         "docsUrl": "https://docs.datahub.com/docs/generated/ingestion/sources/vertexai/",
@@ -440,6 +488,7 @@
     {
         "urn": "urn:li:dataPlatform:hex",
         "name": "hex",
+        "hidden": true,
         "displayName": "Hex",
         "docsUrl": "https://docs.datahub.com/docs/generated/ingestion/sources/hex/",
         "recipe": "source:\n  type: hex\n  config:\n    workspace_name: # Your Hex workspace name\n    token: # Your Workspace Token or PAT",
@@ -455,6 +504,7 @@
     {
         "urn": "urn:li:dataPlatform:preset",
         "name": "preset",
+        "hidden": true,
         "displayName": "Preset",
         "description": "Import Charts and Dashboards from Preset",
         "docsUrl": "https://docs.datahub.com/docs/generated/ingestion/sources/preset/",
@@ -463,6 +513,7 @@
     {
         "urn": "urn:li:dataPlatform:snowplow",
         "name": "snowplow",
+        "hidden": true,
         "displayName": "Snowplow",
         "description": "Import Schemas, Event Specifications, Tracking Plans, Pipelines, and Enrichments from Snowplow BDP.",
         "docsUrl": "https://docs.datahub.com/docs/generated/ingestion/sources/snowplow",

@@ -718,6 +718,36 @@
     displayName: Salesforce
     type: OTHERS
     logoUrl: "assets/platforms/logo-salesforce.svg"
+- entityUrn: urn:li:dataPlatform:zoho-crm
+  entityType: dataPlatform
+  aspectName: dataPlatformInfo
+  changeType: UPSERT
+  aspect:
+    datasetNameDelimiter: "."
+    name: zoho-crm
+    displayName: Zoho CRM
+    type: OTHERS
+    logoUrl: "assets/platforms/zohocrmlogo.png"
+- entityUrn: urn:li:dataPlatform:zoho-books
+  entityType: dataPlatform
+  aspectName: dataPlatformInfo
+  changeType: UPSERT
+  aspect:
+    datasetNameDelimiter: "."
+    name: zoho-books
+    displayName: Zoho Books
+    type: OTHERS
+    logoUrl: "assets/platforms/zohobookslogo.png"
+- entityUrn: urn:li:dataPlatform:posthog
+  entityType: dataPlatform
+  aspectName: dataPlatformInfo
+  changeType: UPSERT
+  aspect:
+    datasetNameDelimiter: "."
+    name: posthog
+    displayName: PostHog
+    type: OTHERS
+    logoUrl: "assets/platforms/posthoglogo.png"
 - entityUrn: urn:li:dataPlatform:unknown
   entityType: dataPlatform
   aspectName: dataPlatformInfo

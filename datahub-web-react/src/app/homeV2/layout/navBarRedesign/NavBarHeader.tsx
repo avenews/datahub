@@ -7,8 +7,9 @@ import NavBarToggler from '@app/homeV2/layout/navBarRedesign/NavBarToggler';
 import { useShowHomePageRedesign } from '@app/homeV3/context/hooks/useShowHomePageRedesign';
 import { useIsHomePage } from '@app/shared/useIsHomePage';
 import analytics, { EventType } from '@src/app/analytics';
+import { resolveRuntimePath } from '@src/utils/runtimeBasePath';
 
-import DatahubCoreLogo from '@images/datahub_core.svg?react';
+const AVENEWS_LOGO_SRC = resolveRuntimePath('/assets/logos/avenews-logo.png');
 
 const Container = styled.div`
     display: flex;
@@ -20,30 +21,20 @@ const Container = styled.div`
     margin-left: -3px;
 `;
 
-const Logotype = styled.div`
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 24px;
-    max-height: 24px;
-    max-width: 42px;
-    border-radius: 4px;
-    position: relative;
+const BrandLogo = styled.img<{ $collapsed: boolean }>`
+    display: block;
+    height: ${({ $collapsed }) => ($collapsed ? '26px' : '28px')};
+    max-height: ${({ $collapsed }) => ($collapsed ? '26px' : '28px')};
+    width: auto;
+    max-width: ${({ $collapsed }) => ($collapsed ? '36px' : '100%')};
     object-fit: contain;
-
-    & svg,
-    img {
-        max-height: 24px;
-        max-width: 42px;
-        min-width: 42px;
-        object-fit: contain;
-    }
 `;
 
 const StyledLink = styled(Link)`
     display: flex;
     height: 40px;
     align-items: center;
+    justify-content: center;
     max-width: calc(100% - 40px);
     width: 100%;
     gap: 8px;
@@ -53,7 +44,7 @@ type Props = {
     logotype?: React.ReactElement;
 };
 
-export default function NavBarHeader({ logotype }: Props) {
+export default function NavBarHeader(_props: Props) {
     const { toggle, isCollapsed } = useNavBarContext();
     const showHomepageRedesign = useShowHomePageRedesign();
     const isHomePage = useIsHomePage();
@@ -68,8 +59,7 @@ export default function NavBarHeader({ logotype }: Props) {
     return (
         <Container>
             <StyledLink to="/" onClick={handleLogoClick} data-testid="nav-bar-home-logo">
-                <Logotype>{logotype}</Logotype>
-                {!isCollapsed && <DatahubCoreLogo />}
+                <BrandLogo src={AVENEWS_LOGO_SRC} alt="Avenews" $collapsed={isCollapsed} />
             </StyledLink>
             {!isCollapsed && <NavBarToggler />}
         </Container>

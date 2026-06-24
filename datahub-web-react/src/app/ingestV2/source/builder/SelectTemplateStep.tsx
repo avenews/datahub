@@ -124,8 +124,9 @@ export const SelectTemplateStep = ({
 
     const filteredSources = ingestionSources.filter(
         (source) =>
-            source.displayName.toLocaleLowerCase().includes(searchFilter.toLocaleLowerCase()) ||
-            source.name.toLocaleLowerCase().includes(searchFilter.toLocaleLowerCase()),
+            !source.hidden &&
+            (source.displayName.toLocaleLowerCase().includes(searchFilter.toLocaleLowerCase()) ||
+                source.name.toLocaleLowerCase().includes(searchFilter.toLocaleLowerCase())),
     );
 
     filteredSources.sort((a, b) => {

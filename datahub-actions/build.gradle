@@ -148,10 +148,14 @@ docker {
   defaultVariant = "slim"
 
   // Base variants (Ubuntu-based)
+  // Local-only connectors (untracked source dirs in metadata-ingestion/) must be added to
+  // BUNDLED_VENV_PLUGINS so they're installed editable from /metadata-ingestion at image build
+  // time. The dynamic per-run venv path fetches acryl-datahub from PyPI and won't have them.
+  def bundledVenvPlugins = "s3,demo-data,file,datahub-gc,datahub-documents,posthog,zoho-crm,zoho-books"
   def baseVariants = [
-    "full": [suffix: "", target: "final-full", args: [APP_ENV: "full", RELEASE_VERSION: python_docker_version, BUNDLED_CLI_VERSION: project.ext.cliVersion, BUNDLED_VENV_SLIM_MODE: "false"]],
-    "slim": [suffix: "-slim", target: "final-slim", args: [APP_ENV: "slim", RELEASE_VERSION: python_docker_version, BUNDLED_CLI_VERSION: project.ext.cliVersion, BUNDLED_VENV_SLIM_MODE: "true"]],
-    "locked": [suffix: "-locked", target: "final-locked", args: [APP_ENV: "locked", RELEASE_VERSION: python_docker_version, BUNDLED_CLI_VERSION: project.ext.cliVersion, BUNDLED_VENV_SLIM_MODE: "true"]]
+    "full": [suffix: "", target: "final-full", args: [APP_ENV: "full", RELEASE_VERSION: python_docker_version, BUNDLED_CLI_VERSION: project.ext.cliVersion, BUNDLED_VENV_SLIM_MODE: "false", BUNDLED_VENV_PLUGINS: bundledVenvPlugins]],
+    "slim": [suffix: "-slim", target: "final-slim", args: [APP_ENV: "slim", RELEASE_VERSION: python_docker_version, BUNDLED_CLI_VERSION: project.ext.cliVersion, BUNDLED_VENV_SLIM_MODE: "true", BUNDLED_VENV_PLUGINS: bundledVenvPlugins]],
+    "locked": [suffix: "-locked", target: "final-locked", args: [APP_ENV: "locked", RELEASE_VERSION: python_docker_version, BUNDLED_CLI_VERSION: project.ext.cliVersion, BUNDLED_VENV_SLIM_MODE: "true", BUNDLED_VENV_PLUGINS: bundledVenvPlugins]]
   ]
 
   variants = baseVariants

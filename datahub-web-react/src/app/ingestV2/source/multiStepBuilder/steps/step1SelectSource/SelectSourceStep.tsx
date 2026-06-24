@@ -82,8 +82,8 @@ export function SelectSourceStep() {
     const [searchQuery, setSearchQuery] = useState<string>('');
     const { ingestionSources } = useIngestionSources();
 
-    const filteredSources = ingestionSources.filter((src) =>
-        src.displayName.toLowerCase().includes(searchQuery.toLowerCase()),
+    const filteredSources = ingestionSources.filter(
+        (src) => !src.hidden && src.displayName.toLowerCase().includes(searchQuery.toLowerCase()),
     );
 
     const customSource = ingestionSources.find((src) => src.name === CUSTOM_SOURCE_NAME);

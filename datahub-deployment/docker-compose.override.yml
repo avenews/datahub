@@ -1,0 +1,30 @@
+services:
+
+  frontend-quickstart:
+    image: ${DATAHUB_FRONTEND_IMAGE}:${DATAHUB_FRONTEND_VERSION}
+    ports:
+      - "9002:9002"
+    environment:
+      DATAHUB_SECRET: ${DATAHUB_SECRET:?must be 32+ chars}
+      DATAHUB_TOKEN_SERVICE_SIGNING_KEY: ${DATAHUB_TOKEN_SERVICE_SIGNING_KEY:?must be set}
+      DATAHUB_TOKEN_SERVICE_SALT: ${DATAHUB_TOKEN_SERVICE_SALT:?must be set}
+
+  datahub-actions-quickstart:
+    image: datahub-actions-custom:latest
+    environment:
+      UV_INDEX_URL: https://pypi.org/simple
+      PIP_INDEX_URL: https://pypi.org/simple
+
+  datahub-gms-quickstart:
+    image: acryldata/datahub-gms:${DATAHUB_VERSION}
+    environment:
+      DATAHUB_SECRET: ${DATAHUB_SECRET:?must be 32+ chars}
+      DATAHUB_TOKEN_SERVICE_SIGNING_KEY: ${DATAHUB_TOKEN_SERVICE_SIGNING_KEY:?must be set}
+      DATAHUB_TOKEN_SERVICE_SALT: ${DATAHUB_TOKEN_SERVICE_SALT:?must be set}
+      METADATA_SERVICE_AUTH_ENABLED: "false"
+
+  mysql:
+    image: mysql:8.2
+    environment:
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?must be set}
+

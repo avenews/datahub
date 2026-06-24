@@ -44,6 +44,7 @@ import notionLogo from '@images/notionlogo.png';
 import oktaLogo from '@images/oktalogo.png';
 import oracleLogo from '@images/oraclelogo.png';
 import postgresLogo from '@images/postgreslogo.png';
+import posthogLogo from '@images/posthoglogo.png';
 import powerbiLogo from '@images/powerbilogo.svg';
 import presetLogo from '@images/presetlogo.svg';
 import prestoLogo from '@images/prestologo.png';
@@ -66,6 +67,8 @@ import timescaledbLogo from '@images/timescalelogo.png';
 import trinoLogo from '@images/trinologo.png';
 import vertexAI from '@images/vertexai.png';
 import verticaLogo from '@images/verticalogo.png';
+import zohoBooksLogo from '@images/zohobookslogo.png';
+import zohoCrmLogo from '@images/zohocrmlogo.png';
 
 const AIRFLOW = 'airflow';
 const AIRFLOW_URN = `urn:li:dataPlatform:${AIRFLOW}`;
@@ -219,6 +222,12 @@ export const FABRIC_DATA_FACTORY_URN = `urn:li:dataPlatform:${FABRIC_DATA_FACTOR
 export const FABRIC_ONELAKE = 'fabric-onelake';
 export const FABRIC_ONELAKE_URN = `urn:li:dataPlatform:${FABRIC_ONELAKE}`;
 export const RDF = 'rdf';
+export const ZOHO_CRM = 'zoho-crm';
+export const ZOHO_CRM_URN = `urn:li:dataPlatform:${ZOHO_CRM}`;
+export const ZOHO_BOOKS = 'zoho-books';
+export const ZOHO_BOOKS_URN = `urn:li:dataPlatform:${ZOHO_BOOKS}`;
+export const POSTHOG = 'posthog';
+export const POSTHOG_URN = `urn:li:dataPlatform:${POSTHOG}`;
 
 export const PLATFORM_URN_TO_LOGO = {
     [AIRFLOW_URN]: airflowLogo,
@@ -290,6 +299,9 @@ export const PLATFORM_URN_TO_LOGO = {
     [FABRIC_URN]: fabricLogo,
     [FABRIC_DATA_FACTORY_URN]: fabricDataFactoryLogo,
     [FABRIC_ONELAKE_URN]: fabricOnelakeLogo,
+    [ZOHO_CRM_URN]: zohoCrmLogo,
+    [ZOHO_BOOKS_URN]: zohoBooksLogo,
+    [POSTHOG_URN]: posthogLogo,
 };
 
 export const SOURCE_TO_PLATFORM_URN = {

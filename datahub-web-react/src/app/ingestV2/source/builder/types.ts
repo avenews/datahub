@@ -19,6 +19,9 @@ export interface SourceConfig {
     isExternal?: boolean;
     isNew?: boolean;
     priority?: number;
+    // When true, this source is hidden from the picker grid but still resolvable
+    // by name so already-created sources can be edited. See docs/deploy/lightweight-ingestion-sources.md.
+    hidden?: boolean;
 }
 
 /**

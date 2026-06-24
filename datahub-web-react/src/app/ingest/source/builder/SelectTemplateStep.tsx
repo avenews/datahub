@@ -97,8 +97,9 @@ export const SelectTemplateStep = ({ state, updateState, goTo, cancel, ingestion
 
     const filteredSources = ingestionSources.filter(
         (source) =>
-            source.displayName.toLocaleLowerCase().includes(searchFilter.toLocaleLowerCase()) ||
-            source.name.toLocaleLowerCase().includes(searchFilter.toLocaleLowerCase()),
+            !source.hidden &&
+            (source.displayName.toLocaleLowerCase().includes(searchFilter.toLocaleLowerCase()) ||
+                source.name.toLocaleLowerCase().includes(searchFilter.toLocaleLowerCase())),
     );
 
     filteredSources.sort((a, b) => {

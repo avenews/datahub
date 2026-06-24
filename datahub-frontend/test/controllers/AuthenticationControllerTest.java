@@ -432,9 +432,6 @@ public class AuthenticationControllerTest {
           .when(() -> com.linkedin.metadata.utils.BasePathUtils.normalizeBasePath("/datahub"))
           .thenReturn("/datahub");
       basePathUtilsMock
-          .when(() -> com.linkedin.metadata.utils.BasePathUtils.addBasePath("/logOut", "/datahub"))
-          .thenReturn("/datahub/logOut");
-      basePathUtilsMock
           .when(
               () -> com.linkedin.metadata.utils.BasePathUtils.addBasePath(anyString(), anyString()))
           .thenAnswer(
@@ -457,6 +454,29 @@ public class AuthenticationControllerTest {
               .findFirst();
 
       assertTrue(redirectCookie.isPresent(), "Redirect cookie should be present for authenticate");
+    }
+  }
+
+  @Test
+  public void testAuthenticateWithLogOutRedirectGoesToRootNotLogout() {
+    // Regression: when a user signs out and re-authenticates, an in-flight redirect_uri=/logOut
+    // must not send them back to the logout endpoint (which would log them out again).
+    when(ssoManager.isSsoEnabled()).thenReturn(false);
+
+    Http.Request request =
+        new Http.RequestBuilder().method("GET").uri("/authenticate?redirect_uri=%2FlogOut").build();
+
+    try (MockedStatic<AuthUtils> authUtilsMock = mockStatic(auth.AuthUtils.class)) {
+      // Bypass SSO branch so we hit the direct Results.redirect(redirectPath) path.
+      authUtilsMock.when(() -> auth.AuthUtils.hasValidSessionCookie(any())).thenReturn(true);
+
+      Result result = controller.authenticate(request);
+
+      assertEquals(303, result.status());
+      assertEquals(
+          "/",
+          result.redirectLocation().orElse(""),
+          "redirect_uri=/logOut must be rewritten to the home page, not back to /logOut");
     }
   }
 

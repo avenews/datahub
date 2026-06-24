@@ -11,6 +11,7 @@ ARG MAVEN_CENTRAL_REPO_URL=https://repo1.maven.org/maven2
 ENV JMX_VERSION=1.0.1
 
 RUN printf '%s\n' "${APK_REPOSITORY_URL}" > /etc/apk/repositories \
+    && echo x86_64 > /etc/apk/arch \
     && apk update --no-cache \
     && apk upgrade --no-cache
 

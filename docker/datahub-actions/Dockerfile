@@ -15,6 +15,7 @@ FROM ${BASE_IMAGE} AS python-base
 
 ENV HOME=/home/datahub
 USER root
+RUN echo x86_64 > /etc/apk/arch && printf '%s\n' "https://packages.wolfi.dev/os" > /etc/apk/repositories
 
 RUN addgroup -g 1000 datahub && \
     adduser -D -u 1000 -G datahub -h /home/datahub -s /bin/sh datahub && \

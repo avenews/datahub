@@ -1,25 +1,20 @@
 import React from 'react';
 import styled from 'styled-components';
 
-import backgroundVideo from '@images/login-signup-animation.mp4';
+import ParticlesBackground from '@app/auth/shared/ParticlesBackground';
 
-const VideoWrapper = styled.div`
+const Wrapper = styled.div`
     position: relative;
     width: 100%;
     height: 100vh;
     overflow: hidden;
-    background-color: ${(props) => props.theme.colors.bgSurfaceNewNav};
+    background-color: #FFFFFF;
 `;
 
-const BackgroundVideo = styled.video`
+const BackgroundLayer = styled.div`
     position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 100vw;
-    height: 100vh;
-    transform: translate(-50%, -50%);
+    inset: 0;
     z-index: 1;
-    object-fit: cover;
 `;
 
 const Content = styled.div`
@@ -38,9 +33,11 @@ interface Props {
 
 export default function AuthPageContainer({ children }: Props) {
     return (
-        <VideoWrapper>
-            <BackgroundVideo src={backgroundVideo} autoPlay muted loop playsInline preload="auto" />
+        <Wrapper>
+            <BackgroundLayer>
+                <ParticlesBackground />
+            </BackgroundLayer>
             <Content>{children}</Content>
-        </VideoWrapper>
+        </Wrapper>
     );
 }

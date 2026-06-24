@@ -1,0 +1,37 @@
+FROM acryldata/datahub-frontend-react:quickstart AS base
+
+USER root
+
+RUN apk add --no-cache zip unzip
+
+# --- Patch datahub-web-react assets JAR (React app) ---
+RUN mkdir -p /tmp/react-assets && \
+    cd /tmp/react-assets && \
+    unzip -q /datahub-frontend/lib/datahub-web-react-1.6.0rc1-SNAPSHOT-assets.jar && \
+    rm -rf /tmp/react-assets/public/*.html \
+           /tmp/react-assets/public/assets \
+           /tmp/react-assets/public/manifest.json \
+           /tmp/react-assets/public/robots.txt \
+           /tmp/react-assets/public/browserconfig.xml && \
+    rm /datahub-frontend/lib/datahub-web-react-1.6.0rc1-SNAPSHOT-assets.jar
+
+COPY datahub-web-react/dist/ /tmp/react-assets/public/
+
+RUN cd /tmp/react-assets && \
+    zip -qr /datahub-frontend/lib/datahub-web-react-1.6.0rc1-SNAPSHOT-assets.jar . && \
+    rm -rf /tmp/react-assets
+
+# --- Patch datahub-frontend assets JAR (Play assets — takes priority for logo/favicon) ---
+RUN mkdir -p /tmp/fe-assets && \
+    cd /tmp/fe-assets && \
+    unzip -q /datahub-frontend/lib/datahub-frontend-1.6.0rc1-SNAPSHOT-assets.jar && \
+    rm /datahub-frontend/lib/datahub-frontend-1.6.0rc1-SNAPSHOT-assets.jar
+
+COPY datahub-web-react/public/assets/logo.png /tmp/fe-assets/public/assets/logo.png
+COPY datahub-web-react/public/assets/icons/favicon.ico /tmp/fe-assets/public/assets/icons/favicon.ico
+
+RUN cd /tmp/fe-assets && \
+    zip -qr /datahub-frontend/lib/datahub-frontend-1.6.0rc1-SNAPSHOT-assets.jar . && \
+    rm -rf /tmp/fe-assets
+
+USER datahub

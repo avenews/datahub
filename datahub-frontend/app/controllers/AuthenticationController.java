@@ -131,7 +131,7 @@ public class AuthenticationController extends Controller {
     String redirectPath = maybeRedirectPath.orElse("/");
     // If the redirect path is /logOut, we do not want to redirect to the logout page after login.
     if (redirectPath.equals("/logOut")) {
-      redirectPath = BasePathUtils.addBasePath("/logOut", this.basePath);
+      redirectPath = BasePathUtils.addBasePath("/", this.basePath);
     }
     try {
       // Reject protocol-relative URLs (e.g. ///google.com) which browsers resolve to

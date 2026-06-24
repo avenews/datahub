@@ -1215,6 +1215,9 @@ entry_points = {
         "timescaledb = datahub.ingestion.source.sql.timescaledb:TimescaleDBSource",
         "omni = datahub.ingestion.source.omni.omni:OmniSource",
         "pinecone = datahub.ingestion.source.pinecone.pinecone_source:PineconeSource",
+        "zoho-crm = datahub.ingestion.source.zoho_crm.zoho_crm_source:ZohoCRMSource",
+        "zoho-books = datahub.ingestion.source.zoho_books.zoho_books_source:ZohoBooksSource",
+        "posthog = datahub.ingestion.source.posthog.posthog_source:PostHogSource",
     ],
     "datahub.ingestion.transformer.plugins": [
         "pattern_cleanup_ownership = datahub.ingestion.transformer.pattern_cleanup_ownership:PatternCleanUpOwnership",

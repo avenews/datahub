@@ -529,7 +529,7 @@ def _run(
     cmd: List[str],
     capture: bool = True,
     cwd: Optional[Path] = None,
-    timeout: int = 600,
+    timeout: int = 1800,
     env: Optional[Dict[str, str]] = None,
 ) -> subprocess.CompletedProcess:
     """Run a subprocess command with DATAHUB_LOCAL_COMMON_ENV injected."""
@@ -867,7 +867,7 @@ def cmd_rebuild(args: argparse.Namespace) -> int:
     ]
     _log(f"Running: {' '.join(gradle_cmd)}")
     build_start = time.time()
-    result = _run(gradle_cmd, capture=False, timeout=600)
+    result = _run(gradle_cmd, capture=False, timeout=1800)
     build_time = time.time() - build_start
 
     if result.returncode != 0:
@@ -1362,7 +1362,7 @@ def cmd_nuke(args: argparse.Namespace) -> int:
 
     # Step 4: Restart from scratch
     _log("Restarting DataHub from scratch via Gradle...")
-    start_args = argparse.Namespace(timeout=600)
+    start_args = argparse.Namespace(timeout=1800)
     return cmd_start(start_args)
 
 
@@ -1421,7 +1421,7 @@ def cmd_setup(args: argparse.Namespace) -> int:
     result = _run(
         ["./gradlew", gradle_task],
         capture=False,
-        timeout=600,
+        timeout=1800,
     )
     if result.returncode != 0:
         _log(f"Setup for {module} failed.")
@@ -2089,7 +2089,7 @@ def build_parser() -> argparse.ArgumentParser:
     start_p.add_argument(
         "--timeout",
         type=int,
-        default=1200,
+        default=3600,
         help="Timeout in seconds for both the Gradle build and readiness wait (default: 1200)",
     )
 

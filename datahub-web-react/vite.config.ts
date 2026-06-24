@@ -96,7 +96,7 @@ export default defineConfig(async ({ mode }) => {
 
     // Setup proxy to the datahub-frontend service.
     const frontendProxy = {
-        target: process.env.REACT_APP_PROXY_TARGET || 'http://localhost:9002',
+        target: process.env.REACT_APP_PROXY_TARGET || 'http://localhost:9080',
         changeOrigin: true,
         configure: proxyDebugConfig,
     };
