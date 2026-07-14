@@ -8,6 +8,14 @@ services:
       DATAHUB_SECRET: ${DATAHUB_SECRET:?must be 32+ chars}
       DATAHUB_TOKEN_SERVICE_SIGNING_KEY: ${DATAHUB_TOKEN_SERVICE_SIGNING_KEY:?must be set}
       DATAHUB_TOKEN_SERVICE_SALT: ${DATAHUB_TOKEN_SERVICE_SALT:?must be set}
+      AUTH_OIDC_ENABLED: "true"
+      AUTH_OIDC_CLIENT_ID: ${AUTH_OIDC_CLIENT_ID:?must be set}
+      AUTH_OIDC_CLIENT_SECRET: ${AUTH_OIDC_CLIENT_SECRET:?must be set}
+      AUTH_OIDC_DISCOVERY_URI: "https://accounts.google.com/.well-known/openid-configuration"
+      AUTH_OIDC_BASE_URL: ${AUTH_OIDC_BASE_URL:?must be set}
+      AUTH_OIDC_USER_NAME_CLAIM: "email"
+      AUTH_OIDC_JIT_PROVISIONING_ENABLED: "false"
+      AUTH_OIDC_PRE_PROVISIONING_REQUIRED: "true"
 
   datahub-actions-quickstart:
     image: datahub-actions-custom:latest
