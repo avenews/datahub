@@ -128,6 +128,9 @@ skills-lock.json
 .env*
 *.env
 
+# Allow example environment file
+!.env.example
+
 # A bunch of binaries we never ever want to add
 datahub-frontend/bin/main/
 datahub-frontend/bin/test/
