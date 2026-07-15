@@ -23,6 +23,11 @@ services:
       UV_INDEX_URL: https://pypi.org/simple
       PIP_INDEX_URL: https://pypi.org/simple
 
+  opensearch:
+    environment:
+      - OPENSEARCH_JAVA_OPTS=-Xms4g -Xmx4g
+    mem_limit: 8g
+
   datahub-gms-quickstart:
     image: acryldata/datahub-gms:${DATAHUB_VERSION}
     environment:
