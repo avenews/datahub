@@ -4,6 +4,8 @@ services:
     image: ${DATAHUB_FRONTEND_IMAGE}:${DATAHUB_FRONTEND_VERSION}
     ports:
       - "9002:9002"
+    volumes:
+      - ./datahub-config/user.props:/datahub-frontend/conf/user.props
     environment:
       DATAHUB_SECRET: ${DATAHUB_SECRET:?must be 32+ chars}
       DATAHUB_TOKEN_SERVICE_SIGNING_KEY: ${DATAHUB_TOKEN_SERVICE_SIGNING_KEY:?must be set}
