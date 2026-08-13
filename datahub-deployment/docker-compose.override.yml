@@ -16,7 +16,7 @@ services:
       AUTH_OIDC_USER_NAME_CLAIM: "email"
       AUTH_OIDC_JIT_PROVISIONING_ENABLED: "false"
       AUTH_OIDC_PRE_PROVISIONING_REQUIRED: "true"
-      AUTH_JAAS_ENABLED: "true"
+      AUTH_JAAS_ENABLED: "false"
 
   datahub-actions-quickstart:
     image: datahub-actions-custom:latest
