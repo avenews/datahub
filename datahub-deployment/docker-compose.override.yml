@@ -17,6 +17,7 @@ services:
       AUTH_OIDC_JIT_PROVISIONING_ENABLED: "false"
       AUTH_OIDC_PRE_PROVISIONING_REQUIRED: "true"
       AUTH_JAAS_ENABLED: "false"
+      METADATA_SERVICE_AUTH_ENABLED: "true"
 
   datahub-actions-quickstart:
     image: datahub-actions-custom:latest
@@ -36,7 +37,7 @@ services:
       DATAHUB_SECRET: ${DATAHUB_SECRET:?must be 32+ chars}
       DATAHUB_TOKEN_SERVICE_SIGNING_KEY: ${DATAHUB_TOKEN_SERVICE_SIGNING_KEY:?must be set}
       DATAHUB_TOKEN_SERVICE_SALT: ${DATAHUB_TOKEN_SERVICE_SALT:?must be set}
-      METADATA_SERVICE_AUTH_ENABLED: "false"
+      METADATA_SERVICE_AUTH_ENABLED: "true"
 
   mysql:
     image: mysql:8.2
