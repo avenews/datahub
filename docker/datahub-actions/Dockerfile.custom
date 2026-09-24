@@ -22,18 +22,22 @@ RUN /usr/bin/uv pip install \
     mkdir -p /home/datahub/.cache/uv && \
     chown -R datahub:datahub /home/datahub/.cache
 
-# Copy custom sources into the metadata-ingestion source tree
+# Copy custom sources into the bundled CLI package.
 COPY metadata-ingestion/src/datahub/ingestion/source/zoho_crm/ \
-     /metadata-ingestion/src/datahub/ingestion/source/zoho_crm/
+    /opt/datahub/venvs/common-venv/lib/python3.11/site-packages/datahub/ingestion/source/zoho_crm/
 
 COPY metadata-ingestion/src/datahub/ingestion/source/zoho_books/ \
-     /metadata-ingestion/src/datahub/ingestion/source/zoho_books/
+    /opt/datahub/venvs/common-venv/lib/python3.11/site-packages/datahub/ingestion/source/zoho_books/
 
 COPY metadata-ingestion/src/datahub/ingestion/source/posthog/ \
-     /metadata-ingestion/src/datahub/ingestion/source/posthog/
+    /opt/datahub/venvs/common-venv/lib/python3.11/site-packages/datahub/ingestion/source/posthog/
 
-# Insert custom sources under the correct group in entry_points.txt
-RUN EP_FILE="/opt/datahub/venvs/common-venv/lib/python3.11/site-packages/acryl_datahub-1!0.0.0.dev0.dist-info/entry_points.txt" && \
+# Pin the bundled CLI to the server-compatible version, then register custom sources.
+RUN /usr/bin/uv pip install \
+    --python /opt/datahub/venvs/common-venv/bin/python3 \
+    --no-deps \
+    acryl-datahub==1.7.0.9 && \
+    EP_FILE="$(find /opt/datahub/venvs/common-venv/lib/python3.11/site-packages -path '*/acryl_datahub-*.dist-info/entry_points.txt' -print -quit)" && \
     sed -i '/^\[datahub\.ingestion\.source\.plugins\]/a zoho-crm = datahub.ingestion.source.zoho_crm.zoho_crm_source:ZohoCRMSource\nzoho-books = datahub.ingestion.source.zoho_books.zoho_books_source:ZohoBooksSource\nposthog = datahub.ingestion.source.posthog.posthog_source:PostHogSource' "$EP_FILE"
 
 # Create proper bundled venvs for custom sources

@@ -81,7 +81,7 @@ _ZOHO_TYPE_TO_DATAHUB: Dict[str, Type] = {
 
 @platform_name("Zoho CRM", id="zoho-crm")
 @config_class(ZohoCRMSourceConfig)
-@support_status(SupportStatus.INCUBATING)
+@support_status(SupportStatus.BETA)
 @capability(SourceCapability.PLATFORM_INSTANCE, "Enabled by default")
 @capability(SourceCapability.SCHEMA_METADATA, "Enabled by default")
 @capability(

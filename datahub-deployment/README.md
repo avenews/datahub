@@ -15,8 +15,9 @@
 11. [Health Checks & Troubleshooting](#health-checks--troubleshooting)
 12. [Backup & Restore](#backup--restore)
 13. [Upgrading DataHub](#upgrading-datahub)
-14. [Production Hardening Checklist](#production-hardening-checklist)
-15. [Stopping & Cleanup](#stopping--cleanup)
+14. [Upgrade Summary](#upgrade-summary)
+15. [Production Hardening Checklist](#production-hardening-checklist)
+16. [Stopping & Cleanup](#stopping--cleanup)
 
 ---
 
@@ -375,14 +376,14 @@ docker compose \
 
 | Image | Tag used | Reason |
 |-------|----------|--------|
-| All DataHub services | `quickstart` | Only coordinated tag available across all images |
+| DataHub services | `${DATAHUB_VERSION}` | Pin every release to one coordinated DataHub tag |
 | `datahub-actions` | `quickstart-locked` | The `quickstart` tag has a broken/corrupted venv (59 broken packages including `prometheus_client`, `tenacity`, `joserfc`). `quickstart-locked` is the stable pinned version |
-| Frontend | `datahub-frontend-custom:latest` | Our custom build |
+| Frontend | `datahub-frontend-custom:${DATAHUB_FRONTEND_VERSION}` | Custom React assets built against the selected DataHub release |
 | Actions | `datahub-actions-custom:latest` | Our custom build |
 
 ### Important: `quickstart-locked` for actions only
 
-The `quickstart-locked` tag only exists for `acryldata/datahub-actions`. All other services (`datahub-gms`, `datahub-upgrade`, etc.) use `quickstart`. This is why `DATAHUB_VERSION=quickstart` in `.env` and the override explicitly sets `datahub-actions-custom:latest`.
+The `quickstart-locked` tag is used only as the base for the custom actions image. The GMS and system-update images use the exact value of `DATAHUB_VERSION`. The custom frontend image must use the same release in `DATAHUB_FRONTEND_VERSION`.
 
 ---
 
@@ -434,6 +435,8 @@ curl -s http://localhost:9002 | grep title
 |---------|-------|-----|
 | Ingestion stuck on "loading" | Actions container crashed | Check actions logs, ensure `datahub-actions-custom:latest` is used |
 | `Failed to find registered source for zoho-crm` | CLI Version not set to `bundled` | Set CLI Version to `bundled` in Advanced Settings |
+| `Server default CLI version is ahead of CLI version` | Bundled actions venv reports an older Docker build version | Rebuild `datahub-actions-custom:latest` with `acryl-datahub==1.7.0.9`, recreate `datahub-actions-quickstart`, and keep custom sources on CLI Version `bundled` |
+| `Invalid version format` in a custom ingestion run | The ingestion CLI and GMS release are not aligned | Verify the bundled CLI reports `1.7.0.9`; do not override custom-source runs with an older or commit-hash CLI version |
 | `Bundled startup venv not found` | Custom actions image not used | Ensure override sets `datahub-actions-quickstart: image: datahub-actions-custom:latest` |
 | Frontend shows default DataHub | Old image cached | Hard refresh browser, or `docker compose up -d --no-deps frontend-quickstart` |
 | `MYSQL_ROOT_PASSWORD access denied` | Root password mismatch | Set `MYSQL_ROOT_PASSWORD=datahub` in `.env` |
@@ -459,26 +462,139 @@ docker exec -i datahub-mysql-1 \
 
 ## Upgrading DataHub
 
-1. Check breaking changes: https://docs.datahub.com/docs/how/updating-datahub
-2. Pull the new base compose file
-3. Rebuild both custom images with the new base
-4. Restart with `-v` to wipe volumes (only if schema migration requires it)
+Use a release tag, not `master`, for a repeatable upgrade. Create a branch when the
+compose or Dockerfile changes are being committed:
 
 ```bash
-# Pull new base compose
-curl -L "https://raw.githubusercontent.com/datahub-project/datahub/master/docker/quickstart/docker-compose.quickstart-profile.yml" \
-  -o docker-compose.quickstart-base.yml
-
-# Rebuild images
 cd ~/datahub
-docker build --no-cache -f docker/datahub-frontend/Dockerfile.custom -t datahub-frontend-custom:latest .
-docker build --no-cache -f docker/datahub-actions/Dockerfile.custom -t datahub-actions-custom:latest .
-
-# Restart
-cd ~/datahub/datahub-deployment
-docker compose -f docker-compose.quickstart-base.yml -f docker-compose.override.yml --profile quickstart down --remove-orphans -v
-docker compose -f docker-compose.quickstart-base.yml -f docker-compose.override.yml --profile quickstart up -d
+git switch -c chore/datahub-upgrade-v1.7.0.1
 ```
+
+For upgrades from a version older than `v1.7.0`, follow the release notes and upgrade
+through `v1.6.0` first. Do not skip a required intermediate release.
+
+### 1. Select and back up the release
+
+```bash
+cd ~/datahub/datahub-deployment
+
+export DATAHUB_VERSION=v1.7.0.1
+export COMPOSE="docker compose --env-file .env -f docker-compose.quickstart-base.yml -f docker-compose.override.yml --profile quickstart"
+
+mkdir -p backups
+$COMPOSE exec -T mysql mysqldump \
+  -u root --password=datahub datahub \
+  > "backups/datahub-before-${DATAHUB_VERSION}-$(date +%Y%m%d-%H%M%S).sql"
+```
+
+Set these matching values in `.env`:
+
+```env
+DATAHUB_VERSION=v1.7.0.1
+DATAHUB_FRONTEND_IMAGE=datahub-frontend-custom
+DATAHUB_FRONTEND_VERSION=v1.7.0.1
+UI_INGESTION_DEFAULT_CLI_VERSION=1.7.0.9
+```
+
+Keep `.env` uncommitted. Generate `DATAHUB_SYSTEM_CLIENT_SECRET` if it is not
+already present; system-update requires it in v1.7.0.1.
+
+### 2. Download the pinned compose file
+
+```bash
+cp docker-compose.quickstart-base.yml \
+  "docker-compose.quickstart-base.before-${DATAHUB_VERSION}.yml"
+
+curl -fL \
+  "https://raw.githubusercontent.com/datahub-project/datahub/${DATAHUB_VERSION}/docker/quickstart/docker-compose.quickstart-profile.yml" \
+  -o docker-compose.quickstart-base.yml
+```
+
+### 3. Rebuild custom images
+
+Build the React assets and frontend image with the same release tag:
+
+```bash
+cd ~/datahub/datahub-web-react
+yarn build
+
+cd ~/datahub
+docker build --no-cache \
+  -f docker/datahub-frontend/Dockerfile.custom \
+  -t datahub-frontend-custom:${DATAHUB_VERSION} .
+```
+
+Build the actions image. Its Dockerfile pins the bundled CLI to `1.7.0.9` and
+registers the custom sources in the bundled environment:
+
+```bash
+docker build --no-cache \
+  -f docker/datahub-actions/Dockerfile.custom \
+  -t datahub-actions-custom:latest .
+```
+
+### 4. Validate tags before restarting
+
+```bash
+cd ~/datahub/datahub-deployment
+$COMPOSE config --images
+```
+
+Confirm that the output includes:
+
+```text
+acryldata/datahub-gms:v1.7.0.1
+acryldata/datahub-upgrade:v1.7.0.1
+datahub-frontend-custom:v1.7.0.1
+datahub-actions-custom:latest
+```
+
+### 5. Restart without deleting data
+
+```bash
+$COMPOSE down --remove-orphans
+$COMPOSE up -d --remove-orphans
+```
+
+Never add `-v` during a normal upgrade. It deletes the MySQL and OpenSearch
+volumes and turns the operation into a fresh installation.
+
+### 6. Verify the upgrade and custom sources
+
+```bash
+$COMPOSE ps
+$COMPOSE logs --tail=200 system-update-quickstart
+
+docker exec datahub-datahub-actions-quickstart-1 \
+  /opt/datahub/venvs/common-venv/bin/python3 -c \
+  "import importlib.metadata as m; print(m.version('acryl-datahub'))"
+
+docker exec datahub-datahub-actions-quickstart-1 \
+  /opt/datahub/venvs/common-venv/bin/python3 -c \
+  "from datahub.ingestion.source.zoho_crm.zoho_crm_source import ZohoCRMSource; print(ZohoCRMSource.__name__)"
+```
+
+The migration should exit `0`, the bundled CLI should report `1.7.0.9`, and
+custom ingestion sources must use CLI Version `bundled` in the UI.
+
+### Rollback boundary
+
+Restore the previous compose file and image tags only if the containers fail to
+start. Database and search migrations are not generally reversible; use the
+MySQL backup and the previous DataHub release’s documented restore procedure
+before attempting a data rollback.
+
+## Upgrade Summary
+
+The `v1.7.0.1` upgrade added the following compatibility and operational changes:
+
+- Pinned the GMS, system-update, and frontend images to `v1.7.0.1`.
+- Updated the custom frontend Dockerfile to use the v1.7.0.1 base image and discover asset JAR names dynamically.
+- Removed unsupported `lineageGraphV2` and `lineageGraphV3` fields from the frontend app-config query so the navigation can finish loading against the v1.7.0.1 GraphQL schema.
+- Added `DATAHUB_SYSTEM_CLIENT_SECRET` wiring for frontend, GMS, actions, and system-update.
+- Updated custom connector support statuses from removed `INCUBATING` to `BETA`.
+- Pinned the bundled actions CLI to `acryl-datahub==1.7.0.9` and kept custom Zoho CRM, Zoho Books, and PostHog sources registered in that environment.
+- Kept entity versioning enabled through `ENTITY_VERSIONING_ENABLED=true`.
 
 ---
 

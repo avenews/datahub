@@ -72,7 +72,7 @@ def _sanitize(value: str) -> str:
 
 @platform_name("PostHog", id="posthog")
 @config_class(PostHogSourceConfig)
-@support_status(SupportStatus.INCUBATING)
+@support_status(SupportStatus.BETA)
 @capability(SourceCapability.PLATFORM_INSTANCE, "Enabled by default")
 @capability(SourceCapability.SCHEMA_METADATA, "Enabled by default")
 @capability(SourceCapability.DESCRIPTIONS, "Enabled by default")
