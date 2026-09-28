@@ -139,7 +139,7 @@ def _infer_type_class(value: Any) -> Any:
 
 @platform_name("Zoho Books", id="zoho-books")
 @config_class(ZohoBooksSourceConfig)
-@support_status(SupportStatus.INCUBATING)
+@support_status(SupportStatus.BETA)
 @capability(SourceCapability.PLATFORM_INSTANCE, "Enabled by default")
 @capability(SourceCapability.SCHEMA_METADATA, "Enabled by default")
 @capability(

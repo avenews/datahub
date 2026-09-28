@@ -44,8 +44,7 @@ import time
 import urllib.error
 import urllib.request
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple
-
+from typing import Any
 
 # ---------------------------------------------------------------------------
 # Plugin extension dataclasses
@@ -56,20 +55,20 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 class ServiceConfig:
     name: str  # short label used in JSON output
     health_url: str  # URL that must return 200 for "healthy"
-    status_url: Optional[str] = None  # if set, JSON body shown in status output
+    status_url: str | None = None  # if set, JSON body shown in status output
     required: bool = True  # if True, must be up for overall ready=True
 
 
 @dataclasses.dataclass
 class DevToolingConfig:
     # Maps repo-path prefix → (gradle_task_or_None, docker_service_name_or_None)
-    module_to_container: Dict[str, Tuple[Optional[str], Optional[str]]]
+    module_to_container: dict[str, tuple[str | None, str | None]]
 
     # Short alias → docker service name  (used by `rebuild --module <alias>`)
-    rebuild_module_aliases: Dict[str, str]
+    rebuild_module_aliases: dict[str, str]
 
     # Ordered list of services; cmd_status and cmd_wait iterate this
-    services: List[ServiceConfig]
+    services: list[ServiceConfig]
 
     # Gradle task paths (all overridable by fork)
     gradle_reload_task: str
@@ -163,7 +162,7 @@ INSTANCES_FILE: Path = DATAHUB_DEV_DIR / "instances.json"
 CONFIG_FILE: Path = DATAHUB_DEV_DIR / "config.json"
 
 # Default host-port for each mapped service (slot 0).  Slot N adds N * SLOT_OFFSET.
-PORT_BASE: Dict[str, int] = {
+PORT_BASE: dict[str, int] = {
     "DATAHUB_MAPPED_GMS_PORT": 8080,
     "DATAHUB_MAPPED_FRONTEND_PORT": 9002,
     "DATAHUB_MAPPED_MYSQL_PORT": 3306,
@@ -183,7 +182,7 @@ PORT_BASE: Dict[str, int] = {
 SLOT_OFFSET: int = 1000
 
 
-def _load_registry() -> Dict[str, Any]:
+def _load_registry() -> dict[str, Any]:
     """Read ~/.datahub/dev/instances.json; return empty structure if absent."""
     if not INSTANCES_FILE.exists():
         return {"version": 1, "instances": {}}
@@ -196,7 +195,7 @@ def _load_registry() -> Dict[str, Any]:
         return {"version": 1, "instances": {}}
 
 
-def _save_registry(data: Dict[str, Any]) -> None:
+def _save_registry(data: dict[str, Any]) -> None:
     """Atomically write the instance registry."""
     DATAHUB_DEV_DIR.mkdir(parents=True, exist_ok=True)
     tmp = INSTANCES_FILE.with_suffix(".tmp")
@@ -204,7 +203,7 @@ def _save_registry(data: Dict[str, Any]) -> None:
     tmp.rename(INSTANCES_FILE)
 
 
-def _load_dev_config() -> Dict[str, Any]:
+def _load_dev_config() -> dict[str, Any]:
     """Read ~/.datahub/dev/config.json; return defaults if absent.
 
     Keys:
@@ -212,7 +211,7 @@ def _load_dev_config() -> Dict[str, Any]:
       max_remote_instances  — concurrent remote runner slots (default 10)
       runner                — path to runner executable (read by datahub-dev.sh)
     """
-    defaults: Dict[str, Any] = {"max_local_instances": 2, "max_remote_instances": 10}
+    defaults: dict[str, Any] = {"max_local_instances": 2, "max_remote_instances": 10}
     if not CONFIG_FILE.exists():
         return defaults
     try:
@@ -222,12 +221,12 @@ def _load_dev_config() -> Dict[str, Any]:
         return defaults
 
 
-def _get_instance() -> Optional[Dict[str, Any]]:
+def _get_instance() -> dict[str, Any] | None:
     """Return this worktree's instance record from the registry, or None."""
     return _load_registry()["instances"].get(WORKTREE_ID)
 
 
-def _compute_ports(slot: int) -> Dict[str, int]:
+def _compute_ports(slot: int) -> dict[str, int]:
     """Compute port assignments for a slot. Slot 0 returns the defaults."""
     return {k: v + slot * SLOT_OFFSET for k, v in PORT_BASE.items()}
 
@@ -243,7 +242,7 @@ def _is_port_free(port: int) -> bool:
             return True
 
 
-def _pick_slot(registry: Dict[str, Any], remote: bool = False) -> int:
+def _pick_slot(registry: dict[str, Any], remote: bool = False) -> int:
     """Return the lowest available slot for a local or remote instance.
 
     Local slots:  0 … max_local_instances-1   (ports 8080, 18080, …)
@@ -276,7 +275,7 @@ def _pick_slot(registry: Dict[str, Any], remote: bool = False) -> int:
     )
 
 
-def _register_remote_instance(runner: str, slot: int) -> Dict[str, Any]:
+def _register_remote_instance(runner: str, slot: int) -> dict[str, Any]:
     """Write a remote instance entry into the LOCAL registry.
 
     For remote instances the "ports" field holds the LOCAL tunnel ports
@@ -285,7 +284,7 @@ def _register_remote_instance(runner: str, slot: int) -> Dict[str, Any]:
     """
     registry = _load_registry()
     local_ports = _compute_ports(slot)  # slot-offset → used as tunnel local ports
-    instance: Dict[str, Any] = {
+    instance: dict[str, Any] = {
         "worktree_path": str(REPO_ROOT),
         "project_name": COMPOSE_PROJECT,
         "type": "remote",
@@ -299,7 +298,7 @@ def _register_remote_instance(runner: str, slot: int) -> Dict[str, Any]:
     return instance
 
 
-def _compute_tunnel_pairs(local_ports: Dict[str, int]) -> List[str]:
+def _compute_tunnel_pairs(local_ports: dict[str, int]) -> list[str]:
     """Build local:remote port-pair strings for the runner's tunnel verb.
 
     The remote container always binds PORT_BASE defaults; the slot offset
@@ -313,11 +312,11 @@ def _compute_tunnel_pairs(local_ports: Dict[str, int]) -> List[str]:
     return pairs
 
 
-def _register_instance(slot: int, ports: Dict[str, int]) -> Dict[str, Any]:
+def _register_instance(slot: int, ports: dict[str, int]) -> dict[str, Any]:
     """Add or update this worktree's LOCAL instance entry in the registry."""
     # Re-read to catch concurrent writes before committing.
     registry = _load_registry()
-    instance: Dict[str, Any] = {
+    instance: dict[str, Any] = {
         "worktree_path": str(REPO_ROOT),
         "project_name": COMPOSE_PROJECT,
         "type": "local",
@@ -340,7 +339,7 @@ def _count_running_dh_instances() -> int:
     )
     if result.returncode != 0:
         return 0
-    projects: Set[str] = set()
+    projects: set[str] = set()
     for line in result.stdout.strip().splitlines():
         line = line.strip()
         if not line:
@@ -359,7 +358,7 @@ def _count_running_dh_instances() -> int:
     return len(projects)
 
 
-def _write_ports_to_env_file(ports: Dict[str, int]) -> None:
+def _write_ports_to_env_file(ports: dict[str, int]) -> None:
     """Upsert all port env vars into DEV_ENV_FILE so docker compose picks them up."""
     if not DEV_ENV_FILE.exists():
         DEV_ENV_FILE.touch()
@@ -495,7 +494,7 @@ def _rebuild_config_services() -> None:
 # ---------------------------------------------------------------------------
 
 
-def _http_get(url: str, timeout: int = 5) -> Tuple[int, str]:
+def _http_get(url: str, timeout: int = 5) -> tuple[int, str]:
     """Make an HTTP GET, return (status_code, body). Returns (-1, error) on failure."""
     try:
         req = urllib.request.Request(url, method="GET")
@@ -507,7 +506,7 @@ def _http_get(url: str, timeout: int = 5) -> Tuple[int, str]:
         return -1, str(e)
 
 
-def _dev_env() -> Dict[str, str]:
+def _dev_env() -> dict[str, str]:
     """Return a copy of os.environ with DATAHUB_LOCAL_COMMON_ENV and
     COMPOSE_PROJECT_NAME injected.
 
@@ -526,11 +525,11 @@ def _dev_env() -> Dict[str, str]:
 
 
 def _run(
-    cmd: List[str],
+    cmd: list[str],
     capture: bool = True,
-    cwd: Optional[Path] = None,
+    cwd: Path | None = None,
     timeout: int = 1800,
-    env: Optional[Dict[str, str]] = None,
+    env: dict[str, str] | None = None,
 ) -> subprocess.CompletedProcess:
     """Run a subprocess command with DATAHUB_LOCAL_COMMON_ENV injected."""
     return subprocess.run(
@@ -543,7 +542,7 @@ def _run(
     )
 
 
-def _run_docker_compose_ps() -> List[Dict[str, Any]]:
+def _run_docker_compose_ps() -> list[dict[str, Any]]:
     """Get docker compose container info as JSON list."""
     result = _run(
         ["docker", "compose", "-p", COMPOSE_PROJECT, "ps", "--format", "json", "-a"]
@@ -566,7 +565,7 @@ def _run_docker_compose_ps() -> List[Dict[str, Any]]:
     return containers
 
 
-def _find_conflicting_projects(our_ports: Set[int]) -> Dict[str, List[str]]:
+def _find_conflicting_projects(our_ports: set[int]) -> dict[str, list[str]]:
     """Find non-DataHub compose projects occupying ports this instance needs.
 
     Returns a dict mapping project name -> list of conflicting host ports.
@@ -584,7 +583,7 @@ def _find_conflicting_projects(our_ports: Set[int]) -> Dict[str, List[str]]:
         return {}
 
     port_pattern = re.compile(r":(\d+)->")
-    conflicts: Dict[str, List[str]] = {}
+    conflicts: dict[str, list[str]] = {}
 
     for line in result.stdout.strip().splitlines():
         line = line.strip()
@@ -620,7 +619,7 @@ def _find_conflicting_projects(our_ports: Set[int]) -> Dict[str, List[str]]:
     return {proj: sorted(set(ports)) for proj, ports in conflicts.items()}
 
 
-def _stop_conflicting_projects(conflicts: Dict[str, List[str]]) -> None:
+def _stop_conflicting_projects(conflicts: dict[str, list[str]]) -> None:
     """Stop compose projects that conflict with our ports."""
     for project, ports in conflicts.items():
         port_list = ", ".join(ports)
@@ -638,7 +637,7 @@ def _stop_conflicting_projects(conflicts: Dict[str, List[str]]) -> None:
             )
 
 
-def _get_container_info(containers: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
+def _get_container_info(containers: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
     """Parse docker compose ps JSON into structured service info."""
     services = {}
     for c in containers:
@@ -663,8 +662,8 @@ def _get_container_info(containers: List[Dict[str, Any]]) -> Dict[str, Dict[str,
 
 
 def _suggest_recovery(
-    services: Dict[str, Dict[str, Any]], gms_ok: bool
-) -> Optional[str]:
+    services: dict[str, dict[str, Any]], gms_ok: bool
+) -> str | None:
     """Analyze service state and suggest recovery action."""
     all_down = (
         all(s["state"] != "running" for s in services.values()) if services else True
@@ -701,11 +700,11 @@ def cmd_status(args: argparse.Namespace) -> int:
     services = _get_container_info(containers)
 
     # Health-check each configured service
-    service_health: Dict[str, Dict[str, Any]] = {}
+    service_health: dict[str, dict[str, Any]] = {}
     for svc in CONFIG.services:
         status_code, _ = _http_get(svc.health_url)
         healthy = status_code == 200
-        entry: Dict[str, Any] = {"healthy": healthy, "status_code": status_code}
+        entry: dict[str, Any] = {"healthy": healthy, "status_code": status_code}
         if svc.status_url:
             status_detail_code, status_detail_body = _http_get(svc.status_url)
             if status_detail_code == 200:
@@ -723,7 +722,7 @@ def cmd_status(args: argparse.Namespace) -> int:
     gms_ok = service_health.get("gms", {}).get("healthy", False)
     suggestion = _suggest_recovery(services, gms_ok)
 
-    result: Dict[str, Any] = {
+    result: dict[str, Any] = {
         "ready": ready,
         **service_health,
         "services": services,
@@ -780,7 +779,7 @@ def cmd_wait(args: argparse.Namespace) -> int:
 # ---------------------------------------------------------------------------
 
 
-def _detect_changed_modules() -> List[Tuple[str, str, str]]:
+def _detect_changed_modules() -> list[tuple[str, str, str]]:
     """Use git diff to detect which modules changed, return list of (module_path, gradle_task, container)."""
     result = _run(["git", "diff", "--name-only", "HEAD"])
     if result.returncode != 0:
@@ -996,7 +995,7 @@ def cmd_test(args: argparse.Namespace) -> int:
 GENERATED_MANIFEST = REPO_ROOT / "scripts" / "generated" / "flag-classification.json"
 
 
-def _load_flag_classification() -> Dict[str, Any]:
+def _load_flag_classification() -> dict[str, Any]:
     """Load the auto-generated flag classification manifest.
 
     The manifest is produced by the generateFlagClassification Gradle task.
@@ -1112,7 +1111,7 @@ def cmd_env_set(args: argparse.Namespace) -> int:
 
 def cmd_env_list(args: argparse.Namespace) -> int:
     """List env vars and whether a restart is needed to apply them."""
-    vars_dict: Dict[str, str] = {}
+    vars_dict: dict[str, str] = {}
     if DEV_ENV_FILE.exists():
         lines = [line for line in DEV_ENV_FILE.read_text().splitlines() if line.strip()]
         vars_dict = dict(line.split("=", 1) for line in lines if "=" in line)
@@ -1371,7 +1370,7 @@ def cmd_nuke(args: argparse.Namespace) -> int:
 # ---------------------------------------------------------------------------
 
 # Maps short names to Gradle tasks. None = special-cased (e.g. frontend uses yarn).
-SETUP_MODULES: Dict[str, Optional[str]] = {
+SETUP_MODULES: dict[str, str | None] = {
     "ingestion": ":metadata-ingestion:installDev",
     "smoke-test": ":smoke-test:installDev",
     "airflow-plugin": ":metadata-ingestion-modules:airflow-plugin:installDev",
@@ -1442,9 +1441,9 @@ def cmd_setup(args: argparse.Namespace) -> int:
     return 0
 
 
-def _resolve_venv_dir(module: str) -> Optional[Path]:
+def _resolve_venv_dir(module: str) -> Path | None:
     """Return the venv path for a setup module, or None if not applicable."""
-    module_dirs: Dict[str, Path] = {
+    module_dirs: dict[str, Path] = {
         "ingestion": REPO_ROOT / "metadata-ingestion" / "venv",
         "smoke-test": REPO_ROOT / "smoke-test" / "venv",
         "airflow-plugin": REPO_ROOT
@@ -1734,7 +1733,7 @@ def cmd_start(args: argparse.Namespace) -> int:
     # --------------------------------------------------------------------------
 
     # Conflict detection: stop any non-DataHub process occupying our ports.
-    our_ports: Set[int] = set(instance["ports"].values())
+    our_ports: set[int] = set(instance["ports"].values())
     conflicts = _find_conflicting_projects(our_ports)
     if conflicts:
         _stop_conflicting_projects(conflicts)
@@ -1898,7 +1897,7 @@ def _cmd_instances_list(args: argparse.Namespace) -> int:
         if kind == "remote":
             # Ask the remote whether it's healthy rather than querying local docker.
             runner_path = inst.get("runner", "")
-            running: Optional[bool] = None
+            running: bool | None = None
             if runner_path:
                 rc = _run(
                     [runner_path, "exec", "--", "scripts/dev/datahub-dev.sh", "status"],
