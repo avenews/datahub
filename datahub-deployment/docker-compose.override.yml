@@ -55,3 +55,23 @@ services:
     environment:
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:?must be set}
 
+  slack-datahub-bot:
+    profiles:
+      - quickstart
+    build: ../slack-datahub-bot
+    container_name: slack-datahub-bot
+    restart: unless-stopped
+    env_file:
+      - ../slack-datahub-bot/.env
+    environment:
+      # Talk to GMS directly on the compose network instead of the public proxy URL.
+      DATAHUB_GMS_URL: https://dev-datahub.avenews.io/api/gms
+    depends_on:
+      datahub-gms-quickstart:
+        condition: service_healthy
+    volumes:
+      - slack-bot-data:/data
+
+volumes:
+  slack-bot-data:
+

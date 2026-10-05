@@ -1,0 +1,52 @@
+# Slack App Manifest for slack-datahub-bot.
+#
+# Import at https://api.slack.com/apps -> Create New App -> From an app manifest.
+# Socket Mode only: no request URL, no public HTTP endpoint, no inbound ports.
+#
+# After import you still need to:
+#  1. Install the app to your workspace.
+#  2. Under "Basic Information" -> App-Level Tokens, generate a token with the
+#     connections:write scope -- this is your SLACK_APP_TOKEN (xapp-...).
+#  3. Under "OAuth & Permissions", copy the Bot User OAuth Token -- this is
+#     your SLACK_BOT_TOKEN (xoxb-...).
+#  4. Under "Basic Information", copy the Signing Secret -- this is your
+#     SLACK_SIGNING_SECRET.
+display_information:
+  name: Avenews DataHub Bot
+  description: Ask questions about our DataHub data catalog, answered under your own DataHub permissions.
+  background_color: "#0b3d5c"
+
+features:
+  bot_user:
+    display_name: datahub-bot
+    always_online: true
+  slash_commands:
+    - command: /datahub-connect
+      description: Link your DataHub personal access token
+      should_escape: false
+    - command: /datahub-disconnect
+      description: Remove your linked DataHub token
+      should_escape: false
+    - command: /datahub-status
+      description: Check whether you're connected to DataHub
+      should_escape: false
+
+oauth_config:
+  scopes:
+    bot:
+      - app_mentions:read
+      - chat:write
+      - commands
+      - im:history
+      - im:read
+
+settings:
+  event_subscriptions:
+    bot_events:
+      - app_mention
+      - message.im
+  interactivity:
+    is_enabled: true
+  org_deploy_enabled: false
+  socket_mode_enabled: true
+  token_rotation_enabled: false

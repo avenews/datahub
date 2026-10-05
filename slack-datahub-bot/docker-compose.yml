@@ -1,0 +1,15 @@
+services:
+  slack-datahub-bot:
+    build: .
+    container_name: slack-datahub-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - bot-data:/data
+    # No ports published: Slack Socket Mode is outbound-only, and the DataHub
+    # MCP server is only ever spawned as a short-lived per-question
+    # subprocess inside this container.
+
+volumes:
+  bot-data:
