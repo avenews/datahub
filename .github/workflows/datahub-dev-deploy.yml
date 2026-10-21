@@ -1,12 +1,12 @@
 name: DataHub dev deploy
 
 # Builds the custom DataHub images, pushes them to ECR, and deploys the chosen services to the DataHub dev host
-# through SSM Run Command. Manual only: nothing runs until someone starts it from the Actions tab, and only from
-# the branch named by DATAHUB_DEPLOY_BRANCH (the AWS role refuses any other).
+# through SSM Run Command. Manual only: nothing runs until someone starts it from the Actions tab. It can be
+# started from any branch; to limit it to one branch, set DATAHUB_DEPLOY_BRANCH (leave it unset for any branch).
 #
 # No environment-specific value is written in this file. Set these repository variables
 # (Settings > Secrets and variables > Actions > Variables); none of them is a secret:
-#   DATAHUB_DEPLOY_BRANCH     branch the workflow may deploy from
+#   DATAHUB_DEPLOY_BRANCH     optional: the only branch the workflow may deploy from (unset = any branch)
 #   DATAHUB_DEV_AWS_REGION    AWS region
 #   DATAHUB_DEV_ROLE_ARN      role the workflow assumes with OIDC (infrastructure output datahub_deploy_role_arn)
 #   DATAHUB_DEV_INSTANCE_ID   EC2 instance of the DataHub dev host (infrastructure output datahub_instance_id)
@@ -47,9 +47,11 @@ jobs:
   build:
     name: Build and push images
     # Frontend and actions are the only custom images; gms alone has nothing to build.
-    if: vars.DATAHUB_DEPLOY_BRANCH != '' && github.ref == format('refs/heads/{0}', vars.DATAHUB_DEPLOY_BRANCH) && contains(fromJSON('["frontend","actions","frontend,actions","all"]'), inputs.services)
+    if: (vars.DATAHUB_DEPLOY_BRANCH == '' || github.ref == format('refs/heads/{0}', vars.DATAHUB_DEPLOY_BRANCH)) && contains(fromJSON('["frontend","actions","frontend,actions","all"]'), inputs.services)
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    # The dev environment makes the OIDC token say environment:dev, which the AWS role trusts from any branch.
+    environment: dev
     outputs:
       frontend_tag: ${{ steps.tags.outputs.frontend_tag }}
       actions_tag: ${{ steps.tags.outputs.actions_tag }}
@@ -134,7 +136,7 @@ jobs:
     name: Deploy to the DataHub dev host
     needs: build
     # build is skipped when only gms is deployed; it must not have failed or been cancelled.
-    if: ${{ !cancelled() && vars.DATAHUB_DEPLOY_BRANCH != '' && github.ref == format('refs/heads/{0}', vars.DATAHUB_DEPLOY_BRANCH) && needs.build.result != 'failure' }}
+    if: ${{ !cancelled() && (vars.DATAHUB_DEPLOY_BRANCH == '' || github.ref == format('refs/heads/{0}', vars.DATAHUB_DEPLOY_BRANCH)) && needs.build.result != 'failure' }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
     environment: dev
