@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Deploys DataHub on this host with Docker Compose. Run as root by the GitHub workflow through SSM Run Command.
 #
-#   deploy.sh --env dev --bundle-dir <dir> --services <frontend|actions|gms|all|a,b> [--frontend-tag T] [--actions-tag T]
+#   deploy.sh --env dev --region <aws-region> --bundle-dir <dir> --services <frontend|actions|gms|all|a,b> [--frontend-tag T] [--actions-tag T]
 #
 # The bundle directory holds this script, config/<env>.conf and the three compose files (the workflow uploads it to
 # S3 and the host downloads it). Secrets are read from AWS Secrets Manager (datahub/<env>/app, mysql, oidc) with the
@@ -13,6 +13,7 @@
 set -euo pipefail
 
 ENVIRONMENT=""
+REGION=""
 BUNDLE_DIR=""
 SERVICES=""
 FRONTEND_TAG=""
@@ -23,6 +24,7 @@ die() { echo "ERROR: $*" >&2; exit 1; }
 while [ $# -gt 0 ]; do
   case "$1" in
     --env) ENVIRONMENT="$2"; shift 2 ;;
+    --region) REGION="$2"; shift 2 ;;
     --bundle-dir) BUNDLE_DIR="$2"; shift 2 ;;
     --services) SERVICES="$2"; shift 2 ;;
     --frontend-tag) FRONTEND_TAG="$2"; shift 2 ;;
@@ -31,14 +33,14 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-[ -n "$ENVIRONMENT" ] && [ -n "$BUNDLE_DIR" ] && [ -n "$SERVICES" ] || die "--env, --bundle-dir and --services are required"
+[ -n "$ENVIRONMENT" ] && [ -n "$REGION" ] && [ -n "$BUNDLE_DIR" ] && [ -n "$SERVICES" ] || die "--env, --region, --bundle-dir and --services are required"
+[[ "$REGION" =~ ^[a-z]{2}-[a-z]+-[0-9]$ ]] || die "invalid region: $REGION"
 [[ "$ENVIRONMENT" =~ ^(dev)$ ]] || die "environment must be dev (this script is dev only for now)"
 [[ "$SERVICES" =~ ^(all|(frontend|actions|gms)(,(frontend|actions|gms))*)$ ]] || die "services must be all or a comma list of frontend, actions, gms"
 for t in "$FRONTEND_TAG" "$ACTIONS_TAG"; do
   [[ -z "$t" || "$t" =~ ^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$ ]] || die "invalid image tag: $t"
 done
 
-REGION="us-east-1"
 APP_USER="ubuntu"
 APP_DIR="/home/$APP_USER/datahub/datahub-deployment"
 STATE_DIR="/home/$APP_USER/datahub/state"

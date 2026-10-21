@@ -1,11 +1,18 @@
 name: DataHub dev deploy
 
 # Builds the custom DataHub images, pushes them to ECR, and deploys the chosen services to the DataHub dev host
-# (avenews-dev-datahub) through SSM Run Command. Manual only: nothing runs until someone starts it from the
-# Actions tab, and only from the feat/avenews branch (the AWS role refuses any other).
+# through SSM Run Command. Manual only: nothing runs until someone starts it from the Actions tab, and only from
+# the branch named by DATAHUB_DEPLOY_BRANCH (the AWS role refuses any other).
 #
-# Infrastructure and the AWS role: avenews/infrastructure, environments/dev/datahub.tf.
-# What the host does: datahub-deployment/deploy/deploy.sh (secrets come from Secrets Manager datahub/dev/*).
+# No environment-specific value is written in this file. Set these repository variables
+# (Settings > Secrets and variables > Actions > Variables); none of them is a secret:
+#   DATAHUB_DEPLOY_BRANCH     branch the workflow may deploy from
+#   DATAHUB_DEV_AWS_REGION    AWS region
+#   DATAHUB_DEV_ROLE_ARN      role the workflow assumes with OIDC (infrastructure output datahub_deploy_role_arn)
+#   DATAHUB_DEV_INSTANCE_ID   EC2 instance of the DataHub dev host (infrastructure output datahub_instance_id)
+#   DATAHUB_DEV_BUNDLE_BUCKET bucket for the deploy bundle (infrastructure output datahub_deploy_bucket)
+# The ECR registry comes from the ECR login step. Application secrets are not in GitHub at all: the host reads
+# them from AWS Secrets Manager (datahub/dev/*). What the host does: datahub-deployment/deploy/deploy.sh.
 
 on:
   workflow_dispatch:
@@ -31,23 +38,30 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  AWS_REGION: us-east-1
-  AWS_ROLE_ARN: arn:aws:iam::647948507563:role/avenews-dev-datahub-github-deploy
-  DEPLOY_INSTANCE_ID: i-0ae9a5573d88062da
-  BUNDLE_BUCKET: avenews-dev-datahub-deploy
-  ECR_REGISTRY: 647948507563.dkr.ecr.us-east-1.amazonaws.com
+  AWS_REGION: ${{ vars.DATAHUB_DEV_AWS_REGION }}
+  AWS_ROLE_ARN: ${{ vars.DATAHUB_DEV_ROLE_ARN }}
+  DEPLOY_INSTANCE_ID: ${{ vars.DATAHUB_DEV_INSTANCE_ID }}
+  BUNDLE_BUCKET: ${{ vars.DATAHUB_DEV_BUNDLE_BUCKET }}
 
 jobs:
   build:
     name: Build and push images
     # Frontend and actions are the only custom images; gms alone has nothing to build.
-    if: github.ref == 'refs/heads/feat/avenews' && contains(fromJSON('["frontend","actions","frontend,actions","all"]'), inputs.services)
+    if: vars.DATAHUB_DEPLOY_BRANCH != '' && github.ref == format('refs/heads/{0}', vars.DATAHUB_DEPLOY_BRANCH) && contains(fromJSON('["frontend","actions","frontend,actions","all"]'), inputs.services)
     runs-on: ubuntu-latest
     timeout-minutes: 45
     outputs:
       frontend_tag: ${{ steps.tags.outputs.frontend_tag }}
       actions_tag: ${{ steps.tags.outputs.actions_tag }}
     steps:
+      - name: Check the repository variables
+        run: |
+          missing=0
+          for v in AWS_REGION AWS_ROLE_ARN; do
+            [ -n "${!v:-}" ] || { echo "::error::$v is empty: set the matching repository variable (see the top of this workflow)"; missing=1; }
+          done
+          exit "$missing"
+
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -71,6 +85,7 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Log in to ECR
+        id: ecr
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Set up Docker Buildx
@@ -99,7 +114,7 @@ jobs:
           context: .
           file: docker/datahub-frontend/Dockerfile.custom
           push: true
-          tags: ${{ env.ECR_REGISTRY }}/datahub-frontend-custom:${{ steps.tags.outputs.frontend_tag }}
+          tags: ${{ steps.ecr.outputs.registry }}/datahub-frontend-custom:${{ steps.tags.outputs.frontend_tag }}
           cache-from: type=gha,scope=datahub-frontend
           cache-to: type=gha,scope=datahub-frontend,mode=max
 
@@ -111,7 +126,7 @@ jobs:
           context: .
           file: docker/datahub-actions/Dockerfile.custom
           push: true
-          tags: ${{ env.ECR_REGISTRY }}/datahub-actions-custom:${{ steps.tags.outputs.actions_tag }}
+          tags: ${{ steps.ecr.outputs.registry }}/datahub-actions-custom:${{ steps.tags.outputs.actions_tag }}
           cache-from: type=gha,scope=datahub-actions
           cache-to: type=gha,scope=datahub-actions,mode=max
 
@@ -119,11 +134,19 @@ jobs:
     name: Deploy to the DataHub dev host
     needs: build
     # build is skipped when only gms is deployed; it must not have failed or been cancelled.
-    if: ${{ !cancelled() && github.ref == 'refs/heads/feat/avenews' && needs.build.result != 'failure' }}
+    if: ${{ !cancelled() && vars.DATAHUB_DEPLOY_BRANCH != '' && github.ref == format('refs/heads/{0}', vars.DATAHUB_DEPLOY_BRANCH) && needs.build.result != 'failure' }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
     environment: dev
     steps:
+      - name: Check the repository variables
+        run: |
+          missing=0
+          for v in AWS_REGION AWS_ROLE_ARN DEPLOY_INSTANCE_ID BUNDLE_BUCKET; do
+            [ -n "${!v:-}" ] || { echo "::error::$v is empty: set the matching repository variable (see the top of this workflow)"; missing=1; }
+          done
+          exit "$missing"
+
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -149,17 +172,17 @@ jobs:
           FRONTEND_TAG: ${{ needs.build.outputs.frontend_tag }}
           ACTIONS_TAG: ${{ needs.build.outputs.actions_tag }}
         run: |
-          args="--env dev --bundle-dir /tmp/datahub-bundle --services ${SERVICES}"
+          args="--env dev --region ${AWS_REGION} --bundle-dir /tmp/datahub-bundle --services ${SERVICES}"
           [ -n "$FRONTEND_TAG" ] && args="$args --frontend-tag ${FRONTEND_TAG}"
           [ -n "$ACTIONS_TAG" ]  && args="$args --actions-tag ${ACTIONS_TAG}"
 
-          jq -n --arg bucket "$BUNDLE_BUCKET" --arg sha "$GITHUB_SHA" --arg args "$args" '{
+          jq -n --arg bucket "$BUNDLE_BUCKET" --arg sha "$GITHUB_SHA" --arg region "$AWS_REGION" --arg args "$args" '{
             executionTimeout: ["1800"],
             commands: [
               "set -e",
               "command -v aws >/dev/null 2>&1 || snap install aws-cli --classic",
               "rm -rf /tmp/datahub-bundle && mkdir -p /tmp/datahub-bundle",
-              ("aws s3 cp s3://" + $bucket + "/deploy/" + $sha + "/ /tmp/datahub-bundle/ --recursive --only-show-errors --region us-east-1"),
+              ("aws s3 cp s3://" + $bucket + "/deploy/" + $sha + "/ /tmp/datahub-bundle/ --recursive --only-show-errors --region " + $region),
               ("bash /tmp/datahub-bundle/deploy.sh " + $args)
             ]
           }' > params.json
