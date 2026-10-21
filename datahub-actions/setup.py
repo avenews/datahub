@@ -177,6 +177,7 @@ entry_points = {
     "datahub_actions.action.plugins": [
         "executor = datahub_actions.plugin.action.execution.executor_action:ExecutorAction",
         "slack = datahub_actions.plugin.action.slack.slack:SlackNotificationAction",
+        "slack_ingestion_failure = datahub_actions.plugin.action.slack_ingestion_failure.slack_ingestion_failure:SlackIngestionFailureAction",
         "teams = datahub_actions.plugin.action.teams.teams:TeamsNotificationAction",
         "metadata_change_sync = datahub_actions.plugin.action.metadata_change_sync.metadata_change_sync:MetadataChangeSyncAction",
         "tag_propagation = datahub_actions.plugin.action.tag.tag_propagation_action:TagPropagationAction",

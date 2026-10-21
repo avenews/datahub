@@ -28,6 +28,12 @@ services:
       DATAHUB_SYSTEM_CLIENT_SECRET: ${DATAHUB_SYSTEM_CLIENT_SECRET:?must be set}
       UV_INDEX_URL: https://pypi.org/simple
       PIP_INDEX_URL: https://pypi.org/simple
+      SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN:?must be set}
+      SLACK_SIGNING_SECRET: ${SLACK_SIGNING_SECRET:?must be set}
+      DATAHUB_BASE_URL: ${DATAHUB_BASE_URL:?must be set}
+      SLACK_CHANNEL_DATA_PLATFORM: ${SLACK_CHANNEL_DATA_PLATFORM:?must be set}
+      SLACK_CHANNEL_ACTIVITY_LOG: ${SLACK_CHANNEL_ACTIVITY_LOG:?must be set}
+      SLACK_CHANNEL_TECHNICAL_CHANGES: ${SLACK_CHANNEL_TECHNICAL_CHANGES:?must be set}
 
   system-update-quickstart:
     environment:

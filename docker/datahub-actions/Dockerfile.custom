@@ -51,4 +51,20 @@ RUN for plugin in zoho-crm zoho-books posthog; do \
             /opt/datahub/venvs/${plugin}-bundled/bin/datahub; \
     done
 
+# Register the custom Slack admin/ingestion action (not in the base image).
+COPY datahub-actions/src/datahub_actions/plugin/action/slack_ingestion_failure/ \
+    /datahub-actions/src/datahub_actions/plugin/action/slack_ingestion_failure/
+
+RUN for EP_FILE in /home/datahub/.venv/lib/python3.11/site-packages/acryl_datahub_actions-*.dist-info/entry_points.txt \
+                   /datahub-actions/src/acryl_datahub_actions.egg-info/entry_points.txt; do \
+      sed -i '/^\[datahub_actions\.action\.plugins\]/a slack_ingestion_failure = datahub_actions.plugin.action.slack_ingestion_failure.slack_ingestion_failure:SlackIngestionFailureAction' "$EP_FILE" && \
+      grep -q slack_ingestion_failure "$EP_FILE"; \
+    done
+
+# Bake the Slack action pipelines into the image so configs ship with the code.
+COPY --chown=datahub:datahub datahub-actions/examples/slack_data_platform.yaml \
+    datahub-actions/examples/slack_activity_log.yaml \
+    datahub-actions/examples/slack_technical_owners.yaml \
+    /etc/datahub/actions/conf/
+
 USER datahub

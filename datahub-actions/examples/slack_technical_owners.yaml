@@ -1,0 +1,26 @@
+# Visibility into source-system changes: schema and lifecycle changes on datasets, including those detected by ingestion.
+name: "slack_technical_changes"
+source:
+  type: "kafka"
+  config:
+    connection:
+      bootstrap: ${KAFKA_BOOTSTRAP_SERVER:-localhost:9092}
+      schema_registry_url: ${SCHEMA_REGISTRY_URL:-http://localhost:8081}
+filter:
+  event_type: "EntityChangeEvent_v1"
+  event:
+    entityType: "dataset"
+    category:
+      - "TECHNICAL_SCHEMA"
+      - "LIFECYCLE"
+action:
+  type: "slack"
+  config:
+    bot_token: ${SLACK_BOT_TOKEN}
+    signing_secret: ${SLACK_SIGNING_SECRET}
+    default_channel: "${SLACK_CHANNEL_TECHNICAL_CHANGES}"
+    base_url: ${DATAHUB_BASE_URL:-http://localhost:9002}
+    # Schema changes are detected by ingestion, which acts as the system user.
+    suppress_system_activity: false
+datahub:
+  server: "${DATAHUB_GMS_PROTOCOL:-http}://${DATAHUB_GMS_HOST:-localhost}:${DATAHUB_GMS_PORT:-8080}"
