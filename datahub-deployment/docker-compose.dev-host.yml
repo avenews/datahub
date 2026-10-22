@@ -17,3 +17,12 @@ services:
     ports: !reset []
   kafka-broker:
     ports: !reset []
+
+  # GMS needs about 95 seconds to start on this 2 vCPU host, longer than the base file's 1m30s start period with
+  # 3 one-second retries, which made Compose abort the deploy with the container already on its way to healthy.
+  datahub-gms-quickstart:
+    healthcheck:
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 3m
