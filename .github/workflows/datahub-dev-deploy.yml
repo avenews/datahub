@@ -171,7 +171,9 @@ jobs:
           cp datahub-deployment/docker-compose.quickstart-base.yml \
              datahub-deployment/docker-compose.override.yml \
              datahub-deployment/docker-compose.dev-host.yml bundle/
-          aws s3 cp bundle "s3://${BUNDLE_BUCKET}/deploy/${GITHUB_SHA}/" --recursive --only-show-errors
+          # One archive, so the host needs only s3:GetObject on the key (no ListBucket).
+          tar -czf bundle.tgz -C bundle .
+          aws s3 cp bundle.tgz "s3://${BUNDLE_BUCKET}/deploy/${GITHUB_SHA}/bundle.tgz" --only-show-errors
 
       - name: Run the deploy on the host
         env:
@@ -188,8 +190,9 @@ jobs:
             commands: [
               "set -e",
               "command -v aws >/dev/null 2>&1 || snap install aws-cli --classic",
-              "rm -rf /tmp/datahub-bundle && mkdir -p /tmp/datahub-bundle",
-              ("aws s3 cp s3://" + $bucket + "/deploy/" + $sha + "/ /tmp/datahub-bundle/ --recursive --only-show-errors --region " + $region),
+              "rm -rf /tmp/datahub-bundle /tmp/datahub-bundle.tgz && mkdir -p /tmp/datahub-bundle",
+              ("aws s3 cp s3://" + $bucket + "/deploy/" + $sha + "/bundle.tgz /tmp/datahub-bundle.tgz --only-show-errors --region " + $region),
+              "tar -xzf /tmp/datahub-bundle.tgz -C /tmp/datahub-bundle",
               ("bash /tmp/datahub-bundle/deploy.sh " + $args)
             ]
           }' > params.json
