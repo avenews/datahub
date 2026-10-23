@@ -1,0 +1,83 @@
+datahub:
+  server: ${DATAHUB_GMS_URL:-http://localhost:8080}
+  token_env: DATAHUB_GMS_TOKEN
+
+# `expectation` is any expect_* method on a GX 0.x pandas dataset; `kwargs` are passed through.
+# Set `name` and `description` to control the human-readable label and description shown in DataHub.
+# To add a rule, append to `checks`; to add a collection, copy a dataset block.
+#
+# Available expectations (use the method name; kwargs match the documented arguments):
+#   Gallery:   https://greatexpectations.io/expectations/
+#   0.18 docs: https://legacy.017.docs.greatexpectations.io/docs/reference/learn/expectations/
+#   Or list locally: python -c "import great_expectations as gx; import pandas as pd; print([m for m in dir(gx.from_pandas(pd.DataFrame())) if m.startswith('expect_')])"
+#
+# Example (not active) - add under `checks`:
+#   - expectation: expect_column_values_to_be_in_set
+#     kwargs: {column: status, value_set: [active, inactive]}
+#   - expectation: expect_column_values_to_be_between
+#     kwargs: {column: age, min_value: 0, max_value: 120, mostly: 0.99}  # mostly = allowed pass ratio
+datasets:
+  - source: mongodb
+    uri_env: MONGO_URI
+    database: agt4-kenya-staging
+    collection: users
+    urn_name: agt4-kenya-staging.users
+    platform: mongodb
+    sample_size: 10000
+    checks:
+      - expectation: expect_column_values_to_not_be_null
+        name: User IDs are present
+        description: Every user record must have an ID.
+        kwargs: {column: _id}
+      - expectation: expect_column_values_to_be_unique
+        name: User IDs are unique
+        description: Each user record must have a different ID.
+        kwargs: {column: _id}
+      - expectation: expect_column_values_to_not_be_null
+        name: Email addresses are present
+        description: Every user record must include an email address.
+        kwargs: {column: email}
+      - expectation: expect_column_values_to_match_regex
+        name: Email addresses use a valid format
+        description: Email addresses must follow a standard email format.
+        format: name@domain.tld
+        kwargs: {column: email, regex: '^[^@\s]+@[^@\s]+\.[^@\s]+$'}
+      - expectation: expect_table_row_count_to_be_between
+        name: Users table has records
+        description: The users table must contain at least one record.
+        kwargs: {min_value: 1}
+
+  - source: mongodb
+    uri_env: MONGO_URI
+    database: agt4-kenya-staging
+    collection: repayments
+    urn_name: agt4-kenya-staging.repayments   # must match the dataset name from Mongo ingestion
+    platform: mongodb
+    sample_size: 10000
+    checks:
+      - expectation: expect_column_values_to_not_be_null
+        name: Repayment IDs are present
+        description: Every repayment record must have an ID.
+        kwargs: {column: _id}
+      - expectation: expect_column_values_to_be_unique
+        name: Repayment IDs are unique
+        description: Each repayment record must have a different ID.
+        kwargs: {column: _id}
+
+# Example (not active) - to cover a new collection, add another block under `datasets`:
+#   - source: mongodb
+#     uri_env: MONGO_URI
+#     database: agt4-kenya-staging
+#     collection: orders
+#     urn_name: agt4-kenya-staging.orders   # must match the dataset name from Mongo ingestion
+#     platform: mongodb
+#     sample_size: 10000
+#     checks:
+#       - expectation: expect_column_values_to_not_be_null
+#         name: Order IDs are present
+#         description: Every order record must have an ID.
+#         kwargs: {column: _id}
+#       - expectation: expect_column_values_to_be_unique
+#         name: Order IDs are unique
+#         description: Each order record must have a different ID.
+#         kwargs: {column: _id}

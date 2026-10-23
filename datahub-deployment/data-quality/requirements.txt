@@ -1,0 +1,6 @@
+acryl-datahub
+great-expectations>=0.18,<1.0
+pandas
+pymongo
+pyyaml
+requests

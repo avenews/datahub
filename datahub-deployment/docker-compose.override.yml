@@ -18,7 +18,7 @@ services:
       AUTH_OIDC_USER_NAME_CLAIM: "email"
       AUTH_OIDC_JIT_PROVISIONING_ENABLED: "false"
       AUTH_OIDC_PRE_PROVISIONING_REQUIRED: "true"
-      AUTH_JAAS_ENABLED: "false"
+      AUTH_JAAS_ENABLED: "true"
       METADATA_SERVICE_AUTH_ENABLED: "true"
 
   datahub-actions-quickstart:
@@ -28,6 +28,22 @@ services:
       DATAHUB_SYSTEM_CLIENT_SECRET: ${DATAHUB_SYSTEM_CLIENT_SECRET:?must be set}
       UV_INDEX_URL: https://pypi.org/simple
       PIP_INDEX_URL: https://pypi.org/simple
+
+  dq-runner:
+    build: ./data-quality
+    profiles:
+      - quickstart
+    restart: unless-stopped
+    command: ["--interval", "${DQ_INTERVAL_SECONDS:-3600}"]
+    environment:
+      DATAHUB_GMS_URL: http://datahub-gms:8080
+      DATAHUB_GMS_TOKEN: ${DATAHUB_GMS_TOKEN:?must be set (personal access token)}
+      MONGO_URI: ${MONGO_URI:?must be set}
+    volumes:
+      - ./data-quality/checks.yml:/app/checks.yml:ro
+    depends_on:
+      datahub-gms-quickstart:
+        condition: service_healthy
 
   system-update-quickstart:
     environment:
