@@ -80,14 +80,13 @@ class SlackIngestionFailureAction(Action):
         except (ValueError, AttributeError):
             logger.warning("Unparseable execution result for %s", event.entityUrn)
             return None
+        if status == "RUNNING":
+            return None
         emoji = (
             ":rotating_light:" if status in FAILED_STATUSES else ":white_check_mark:"
         )
         link = f"{self.config.base_url.rstrip('/')}/ingestion"
-        return (
-            f"{emoji} Ingestion run *{status}* ({event.entityUrn}). "
-            f"<{link}|View ingestion runs>"
-        )
+        return f"{emoji} Ingestion *{status}* | <{link}|View runs>"
 
     def _admin_text(self, event: MetadataChangeLogClass) -> str:
         base = self.config.base_url.rstrip("/")

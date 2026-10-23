@@ -1,4 +1,4 @@
-# Admin channel: every ingestion run result (success and failure) plus changes to ingestion sources, secrets, access tokens, policies, roles and groups.
+# Admin channel: final ingestion run results (success and failure) plus changes to ingestion sources, secrets, access tokens, policies, roles and groups.
 name: "slack_data_platform"
 source:
   type: "kafka"

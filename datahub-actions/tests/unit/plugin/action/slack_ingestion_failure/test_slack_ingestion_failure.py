@@ -68,6 +68,19 @@ def test_all_run_results_are_posted(action, status, emoji):
     )
     text = action.post.call_args.kwargs["text"]
     assert emoji in text and status in text
+    assert "urn:li:" not in text
+    assert "View runs" in text
+
+
+def test_running_results_are_not_posted(action):
+    action.act(
+        _mcl(
+            "dataHubExecutionRequest",
+            "dataHubExecutionRequestResult",
+            {"status": "RUNNING"},
+        )
+    )
+    action.post.assert_not_called()
 
 
 def test_admin_change_never_includes_aspect_payload(action):
