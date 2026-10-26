@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Deploys DataHub on this host with Docker Compose. Run as root by the GitHub workflow through SSM Run Command.
 #
-#   deploy.sh --env dev --region <aws-region> --bundle-dir <dir> --services <frontend|actions|gms|all|a,b> [--frontend-tag T] [--actions-tag T]
+#   deploy.sh --env <dev|prod> --region <aws-region> --bundle-dir <dir> --services <frontend|actions|gms|all|a,b> [--frontend-tag T] [--actions-tag T]
 #
 # The bundle directory holds this script, config/<env>.conf and the three compose files (the workflow uploads it to
 # S3 and the host downloads it). Secrets are read from AWS Secrets Manager (datahub/<env>/app, mysql, oidc) with the
@@ -35,7 +35,7 @@ done
 
 [ -n "$ENVIRONMENT" ] && [ -n "$REGION" ] && [ -n "$BUNDLE_DIR" ] && [ -n "$SERVICES" ] || die "--env, --region, --bundle-dir and --services are required"
 [[ "$REGION" =~ ^[a-z]{2}-[a-z]+-[0-9]$ ]] || die "invalid region: $REGION"
-[[ "$ENVIRONMENT" =~ ^(dev)$ ]] || die "environment must be dev (this script is dev only for now)"
+[[ "$ENVIRONMENT" =~ ^(dev|prod)$ ]] || die "environment must be dev or prod"
 [[ "$SERVICES" =~ ^(all|(frontend|actions|gms)(,(frontend|actions|gms))*)$ ]] || die "services must be all or a comma list of frontend, actions, gms"
 for t in "$FRONTEND_TAG" "$ACTIONS_TAG"; do
   [[ -z "$t" || "$t" =~ ^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$ ]] || die "invalid image tag: $t"
