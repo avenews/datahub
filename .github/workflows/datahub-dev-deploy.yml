@@ -1,22 +1,32 @@
-name: DataHub dev deploy
+name: DataHub deploy
 
-# Builds the custom DataHub images, pushes them to ECR, and deploys the chosen services to the DataHub dev host
-# through SSM Run Command. Manual only: nothing runs until someone starts it from the Actions tab. It can be
-# started from any branch; to limit it to one branch, set DATAHUB_DEPLOY_BRANCH (leave it unset for any branch).
+# Builds the custom DataHub images, pushes them to ECR, and deploys the chosen services to the DataHub host of the
+# chosen target (dev or prod) through SSM Run Command. Manual only: nothing runs until someone starts it from the
+# Actions tab. It can be started from any branch; to limit it to one branch, set DATAHUB_DEPLOY_BRANCH (leave it
+# unset for any branch). A prod run uses the GitHub environment "prod": give that environment required reviewers
+# and a deployment-branch rule, and every prod deploy waits for an approval.
 #
-# No environment-specific value is written in this file. Set these repository variables
-# (Settings > Secrets and variables > Actions > Variables); none of them is a secret:
-#   DATAHUB_DEPLOY_BRANCH     optional: the only branch the workflow may deploy from (unset = any branch)
-#   DATAHUB_DEV_AWS_REGION    AWS region
-#   DATAHUB_DEV_ROLE_ARN      role the workflow assumes with OIDC (infrastructure output datahub_deploy_role_arn)
-#   DATAHUB_DEV_INSTANCE_ID   EC2 instance of the DataHub dev host (infrastructure output datahub_instance_id)
-#   DATAHUB_DEV_BUNDLE_BUCKET bucket for the deploy bundle (infrastructure output datahub_deploy_bucket)
+# No environment-specific value is written in this file. Set these repository variables for each target
+# (Settings > Secrets and variables > Actions > Variables); none of them is a secret. <T> is DEV or PROD:
+#   DATAHUB_DEPLOY_BRANCH      optional: the only branch the workflow may deploy from (unset = any branch)
+#   DATAHUB_<T>_AWS_REGION     AWS region
+#   DATAHUB_<T>_ROLE_ARN       role the workflow assumes with OIDC (infrastructure output datahub_deploy_role_arn)
+#   DATAHUB_<T>_INSTANCE_ID    EC2 instance of the DataHub host (infrastructure output datahub_instance_id)
+#   DATAHUB_<T>_BUNDLE_BUCKET  bucket for the deploy bundle (infrastructure output datahub_deploy_bucket)
 # The ECR registry comes from the ECR login step. Application secrets are not in GitHub at all: the host reads
-# them from AWS Secrets Manager (datahub/dev/*). What the host does: datahub-deployment/deploy/deploy.sh.
+# them from AWS Secrets Manager (datahub/<target>/*). What the host does: datahub-deployment/deploy/deploy.sh.
 
 on:
   workflow_dispatch:
     inputs:
+      target:
+        description: "Where to deploy. prod waits for the approvals set on the prod GitHub environment."
+        type: choice
+        required: true
+        default: dev
+        options:
+          - dev
+          - prod
       services:
         description: "Services to build and deploy. gms and all also run the system-update job."
         type: choice
@@ -34,14 +44,16 @@ permissions:
   contents: read
 
 concurrency:
-  group: datahub-dev-deploy
+  group: datahub-deploy-${{ inputs.target }}
   cancel-in-progress: false
 
 env:
-  AWS_REGION: ${{ vars.DATAHUB_DEV_AWS_REGION }}
-  AWS_ROLE_ARN: ${{ vars.DATAHUB_DEV_ROLE_ARN }}
-  DEPLOY_INSTANCE_ID: ${{ vars.DATAHUB_DEV_INSTANCE_ID }}
-  BUNDLE_BUCKET: ${{ vars.DATAHUB_DEV_BUNDLE_BUCKET }}
+  # The variable names are built from the target (GitHub expressions have no upper()).
+  TARGET: ${{ inputs.target }}
+  AWS_REGION: ${{ vars[format('DATAHUB_{0}_AWS_REGION', fromJSON('{"dev":"DEV","prod":"PROD"}')[inputs.target])] }}
+  AWS_ROLE_ARN: ${{ vars[format('DATAHUB_{0}_ROLE_ARN', fromJSON('{"dev":"DEV","prod":"PROD"}')[inputs.target])] }}
+  DEPLOY_INSTANCE_ID: ${{ vars[format('DATAHUB_{0}_INSTANCE_ID', fromJSON('{"dev":"DEV","prod":"PROD"}')[inputs.target])] }}
+  BUNDLE_BUCKET: ${{ vars[format('DATAHUB_{0}_BUNDLE_BUCKET', fromJSON('{"dev":"DEV","prod":"PROD"}')[inputs.target])] }}
 
 jobs:
   build:
@@ -50,8 +62,8 @@ jobs:
     if: (vars.DATAHUB_DEPLOY_BRANCH == '' || github.ref == format('refs/heads/{0}', vars.DATAHUB_DEPLOY_BRANCH)) && contains(fromJSON('["frontend","actions","frontend,actions","all"]'), inputs.services)
     runs-on: ubuntu-latest
     timeout-minutes: 45
-    # The dev environment makes the OIDC token say environment:dev, which the AWS role trusts from any branch.
-    environment: dev
+    # The environment makes the OIDC token say environment:<target>, which is what the AWS role of that target trusts.
+    environment: ${{ inputs.target }}
     outputs:
       frontend_tag: ${{ steps.tags.outputs.frontend_tag }}
       actions_tag: ${{ steps.tags.outputs.actions_tag }}
@@ -70,7 +82,7 @@ jobs:
       - name: Work out the image tags
         id: tags
         run: |
-          version="$(sed -n 's/^DATAHUB_VERSION=//p' datahub-deployment/deploy/config/dev.conf)"
+          version="$(sed -n 's/^DATAHUB_VERSION=//p' datahub-deployment/deploy/config/${TARGET}.conf)"
           tag="${version}-${GITHUB_SHA::7}"
           [[ "$tag" =~ ^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$ ]] || { echo "bad tag: $tag"; exit 1; }
           case "${{ inputs.services }}" in
@@ -138,13 +150,13 @@ jobs:
           cache-to: type=gha,scope=datahub-actions,mode=max
 
   deploy:
-    name: Deploy to the DataHub dev host
+    name: Deploy to the DataHub ${{ inputs.target }} host
     needs: build
     # build is skipped when only gms is deployed; it must not have failed or been cancelled.
     if: ${{ !cancelled() && (vars.DATAHUB_DEPLOY_BRANCH == '' || github.ref == format('refs/heads/{0}', vars.DATAHUB_DEPLOY_BRANCH)) && needs.build.result != 'failure' }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
-    environment: dev
+    environment: ${{ inputs.target }}
     steps:
       - name: Check the repository variables
         run: |
@@ -167,7 +179,7 @@ jobs:
         run: |
           mkdir -p bundle/config
           cp datahub-deployment/deploy/deploy.sh bundle/
-          cp datahub-deployment/deploy/config/dev.conf bundle/config/
+          cp "datahub-deployment/deploy/config/${TARGET}.conf" bundle/config/
           cp datahub-deployment/docker-compose.quickstart-base.yml \
              datahub-deployment/docker-compose.override.yml \
              datahub-deployment/docker-compose.dev-host.yml bundle/
@@ -181,7 +193,7 @@ jobs:
           FRONTEND_TAG: ${{ needs.build.outputs.frontend_tag }}
           ACTIONS_TAG: ${{ needs.build.outputs.actions_tag }}
         run: |
-          args="--env dev --region ${AWS_REGION} --bundle-dir /tmp/datahub-bundle --services ${SERVICES}"
+          args="--env ${TARGET} --region ${AWS_REGION} --bundle-dir /tmp/datahub-bundle --services ${SERVICES}"
           [ -n "$FRONTEND_TAG" ] && args="$args --frontend-tag ${FRONTEND_TAG}"
           [ -n "$ACTIONS_TAG" ]  && args="$args --actions-tag ${ACTIONS_TAG}"
 
@@ -200,7 +212,7 @@ jobs:
           command_id="$(aws ssm send-command \
             --instance-ids "$DEPLOY_INSTANCE_ID" \
             --document-name AWS-RunShellScript \
-            --comment "DataHub dev deploy ${GITHUB_SHA::7} (${SERVICES})" \
+            --comment "DataHub ${TARGET} deploy ${GITHUB_SHA::7} (${SERVICES})" \
             --parameters file://params.json \
             --query Command.CommandId --output text)"
           echo "SSM command: $command_id"
